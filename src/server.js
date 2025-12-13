@@ -24,7 +24,7 @@ app.get('/test-server', (req, res) => {
   res.send('Social Links online! ✅')
 })
 
-app.use('/api/users', authRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/links', linkRoutes)
 app.use('/api', publicRoutes)
 

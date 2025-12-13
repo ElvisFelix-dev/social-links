@@ -1,14 +1,17 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 import cors from 'cors'
 import passport from 'passport'
+
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+import './config/passport.js'
 
 import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
-
-dotenv.config()
 
 const app = express()
 app.use(express.json())

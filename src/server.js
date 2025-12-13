@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import passport from 'passport'
 
-import authRoutes from './routes/userRoutes.js'
+import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
 

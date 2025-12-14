@@ -15,7 +15,7 @@ export const registerClick = async (req, res) => {
     link.clicks += 1
     await link.save()
 
-    // 📊 salva analytics
+    // 📊 salva analytics (não bloqueante)
     Click.create({
       link: link._id,
       user: link.user,
@@ -23,9 +23,21 @@ export const registerClick = async (req, res) => {
       userAgent: req.headers['user-agent']
     }).catch(() => {})
 
-    // 🔁 redireciona
-    return res.redirect(link.url)
+    // ✅ GARANTIR URL VÁLIDA
+    let redirectUrl = link.url
+
+    if (
+      !redirectUrl.startsWith('http://') &&
+      !redirectUrl.startsWith('https://')
+    ) {
+      redirectUrl = `https://${redirectUrl}`
+    }
+
+    // 🔁 redireciona corretamente
+    return res.redirect(redirectUrl)
+
   } catch (error) {
+    console.error('Erro ao registrar clique:', error)
     return res.status(500).json({ error: 'Erro ao registrar clique' })
   }
 }

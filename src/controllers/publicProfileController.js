@@ -17,8 +17,15 @@ export const getPublicProfile = async (req, res) => {
       isActive: true
     }).sort({ order: 1 })
 
-    return res.json({ user, links })
+    return res.json({
+      name: user.name,
+      avatar: user.avatar,
+      bio: user.bio,
+      username: user.username,
+      links
+    })
   } catch (error) {
+    console.error(error)
     return res.status(500).json({ error: 'Erro ao carregar perfil' })
   }
 }

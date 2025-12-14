@@ -20,6 +20,6 @@ router.get(
   googleLogin
 )
 
-router.get('/me', authMiddleware, passport.authenticate('jwt', { session: false }), getCurrentUser)
+router.get('/me', authMiddleware, getCurrentUser)
 
 export default router

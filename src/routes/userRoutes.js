@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import passport from 'passport'
-import { googleLogin, getCurrentUser } from '../controllers/userController.js'
+import { googleLogin, getCurrentUser, updateProfile } from '../controllers/userController.js'
 import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = Router()
@@ -21,5 +21,7 @@ router.get(
 )
 
 router.get('/me', authMiddleware, getCurrentUser)
+
+router.put('/profile', authMiddleware, updateProfile)
 
 export default router

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import passport from 'passport'
-import { googleLogin } from '../controllers/userController.js'
+import { googleLogin, getCurrentUser } from '../controllers/userController.js'
+import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = Router()
 
@@ -18,5 +19,7 @@ router.get(
   passport.authenticate('google', { session: false }),
   googleLogin
 )
+
+router.get('/me', authMiddleware, passport.authenticate('jwt', { session: false }), getCurrentUser)
 
 export default router

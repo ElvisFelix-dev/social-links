@@ -3,19 +3,9 @@ import Link from '../models/Link.js'
 // ➕ Criar link
 export const createLink = async (req, res) => {
   try {
-    if (!req.user?._id) {
-      return res.status(401).json({ error: 'Usuário não autenticado' })
-    }
-
     const { title, url, icon } = req.body
 
-    if (!title || !url) {
-      return res.status(400).json({ error: 'Título e URL são obrigatórios' })
-    }
-
-    const totalLinks = await Link.countDocuments({
-      user: req.user._id
-    })
+    const totalLinks = await Link.countDocuments({ user: req.user._id })
 
     const link = await Link.create({
       title,
@@ -27,11 +17,9 @@ export const createLink = async (req, res) => {
 
     return res.status(201).json(link)
   } catch (error) {
-    console.error('Erro createLink:', error)
-    return res.status(500).json({ error: 'Erro ao criar link' })
+    return res.status(400).json({ error: 'Erro ao criar link' })
   }
 }
-
 
 // 📄 Listar links do usuário
 export const getMyLinks = async (req, res) => {
@@ -50,10 +38,6 @@ export const updateLink = async (req, res) => {
   try {
     const { id } = req.params
 
-    if (!id) {
-      return res.status(400).json({ error: 'ID inválido' })
-    }
-
     const link = await Link.findOneAndUpdate(
       { _id: id, user: req.user._id },
       req.body,
@@ -66,8 +50,7 @@ export const updateLink = async (req, res) => {
 
     return res.json(link)
   } catch (error) {
-    console.error('Erro updateLink:', error)
-    return res.status(500).json({ error: 'Erro ao atualizar link' })
+    return res.status(400).json({ error: 'Erro ao atualizar link' })
   }
 }
 
@@ -110,29 +93,4 @@ export const reorderLinks = async (req, res) => {
   } catch (error) {
     return res.status(400).json({ error: 'Erro ao reordenar links' })
   }
-}
-
-export const toggleLike = async (req, res) => {
-  const userId = req.user.id
-  const { linkId } = req.params
-
-  const link = await Link.findById(linkId)
-  if (!link) {
-    return res.status(404).json({ error: 'Link não encontrado' })
-  }
-
-  const hasLiked = link.likes.includes(userId)
-
-  if (hasLiked) {
-    link.likes.pull(userId)
-  } else {
-    link.likes.push(userId)
-  }
-
-  await link.save()
-
-  return res.json({
-    liked: !hasLiked,
-    likesCount: link.likes.length
-  })
 }

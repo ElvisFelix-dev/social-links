@@ -1,14 +1,7 @@
 import { Router } from 'express'
 import passport from 'passport'
-import {
-  googleLogin,
-  getCurrentUser,
-  updateProfile,
-  toggleFollow,
-  updateProfileTheme
-} from '../controllers/userController.js'
+import { googleLogin, getCurrentUser, updateProfile } from '../controllers/userController.js'
 import { authMiddleware } from '../middleware/authMiddleware.js'
-import uploadBackground from '../middleware/uploadBackground.js'
 
 const router = Router()
 
@@ -30,14 +23,5 @@ router.get(
 router.get('/me', authMiddleware, getCurrentUser)
 
 router.put('/profile', authMiddleware, updateProfile)
-
-router.post('/:userId/follow', authMiddleware, toggleFollow)
-
-router.put(
-  '/profile-theme',
-  authMiddleware,
-  uploadBackground.single('background'),
-  updateProfileTheme
-)
 
 export default router

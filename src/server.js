@@ -8,7 +8,6 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import './config/passport.js'
-import { testCloudinaryConnection } from './config/cloudinary.js'
 
 import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
@@ -23,9 +22,6 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log('📊 Connected to db'))
   .catch((err) => console.error('Error connected db:', err.message))
-
-// Testa Cloudinary
-testCloudinaryConnection()
 
 app.get('/test-server', (req, res) => {
   res.send('Social Links online! ✅')

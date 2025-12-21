@@ -77,12 +77,13 @@ const userSchema = new mongoose.Schema(
 
 // Quantidade de seguidores
 userSchema.virtual('followersCount').get(function () {
-  return this.followers.length
+  return this.followers?.length || 0
 })
 
 // Quantidade de seguindo
 userSchema.virtual('followingCount').get(function () {
-  return this.following.length
+  return this.following?.length || 0
 })
+
 
 export default mongoose.model('User', userSchema)

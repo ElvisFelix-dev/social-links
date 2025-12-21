@@ -56,12 +56,13 @@ export const getCurrentUser = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user?._id
-
     if (!userId) {
       return res.status(401).json({ error: 'Usuário não autenticado' })
     }
 
-    const { username, bio } = req.body
+    // 🔹 Para segurança: req.body pode vir undefined com multipart/form-data
+    const username = req.body?.username
+    const bio = req.body?.bio
 
     if (!username || !username.trim()) {
       return res.status(400).json({ error: 'Username é obrigatório' })
@@ -76,12 +77,13 @@ export const updateProfile = async (req, res) => {
       return res.status(409).json({ error: 'Username já está em uso' })
     }
 
+    // 🧠 Monta update dinâmico
     const updateData = {
       username: username.trim(),
       bio: bio?.substring(0, 160) || ''
     }
 
-    // 🖼️ Background via Multer + Cloudinary
+    // 🖼️ BACKGROUND VIA MULTER + CLOUDINARY
     if (req.file?.path) {
       updateData.profileBackground = req.file.path
     }

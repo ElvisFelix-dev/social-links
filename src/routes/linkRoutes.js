@@ -13,11 +13,14 @@ const router = Router()
 
 router.use(authMiddleware)
 
+// ⚠️ rotas específicas PRIMEIRO
+router.put('/reorder/all', reorderLinks)
+router.post('/:linkId/like', toggleLike)
+
+// depois as genéricas
 router.post('/', createLink)
 router.get('/', getMyLinks)
 router.put('/:id', updateLink)
 router.delete('/:id', deleteLink)
-router.put('/reorder/all', reorderLinks)
-router.post('/:linkId/like', authMiddleware, toggleLike)
 
 export default router

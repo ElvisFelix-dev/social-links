@@ -24,16 +24,28 @@ export const googleLogin = (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user?._id
+
     if (!userId) {
       return res.status(401).json({ error: 'Usuário não autenticado' })
     }
 
-    const user = await User.findById(userId).select('name avatar username email bio')
+    const user = await User.findById(userId)
+      .select('name avatar username email bio profileBackground followers following')
+
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    return res.json(user)
+    return res.json({
+      name: user.name,
+      avatar: user.avatar,
+      username: user.username,
+      email: user.email,
+      bio: user.bio,
+      profileBackground: user.profileBackground,
+      followersCount: user.followers.length,
+      followingCount: user.following.length
+    })
   } catch (err) {
     console.error('Erro ao buscar usuário:', err)
     return res.status(500).json({ error: 'Erro ao buscar usuário' })
@@ -44,35 +56,144 @@ export const getCurrentUser = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user?._id
+
     if (!userId) {
       return res.status(401).json({ error: 'Usuário não autenticado' })
     }
 
     const { username, bio } = req.body
 
-    // Valida username
     if (!username || !username.trim()) {
       return res.status(400).json({ error: 'Username é obrigatório' })
     }
 
-    const existingUser = await User.findOne({ username, _id: { $ne: userId } })
+    const existingUser = await User.findOne({
+      username: username.trim(),
+      _id: { $ne: userId }
+    })
+
     if (existingUser) {
       return res.status(409).json({ error: 'Username já está em uso' })
     }
 
-    // Atualiza o usuário
+    const updateData = {
+      username: username.trim(),
+      bio: bio?.substring(0, 160) || ''
+    }
+
+    // 🖼️ Background via Multer + Cloudinary
+    if (req.file?.path) {
+      updateData.profileBackground = req.file.path
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
+      updateData,
       {
-        username: username.trim(),
-        bio: bio?.substring(0, 160) || ''
-      },
-      { new: true, runValidators: true, select: 'name avatar username email bio' }
+        new: true,
+        runValidators: true,
+        select: 'name avatar username email bio profileBackground'
+      }
     )
 
     return res.json(updatedUser)
   } catch (err) {
     console.error('Erro ao atualizar perfil:', err)
     return res.status(500).json({ error: 'Erro ao atualizar perfil' })
+  }
+}
+
+/* ================= FOLLOW USER ================= */
+export const followUser = async (req, res) => {
+  try {
+    const loggedUserId = req.user._id
+    const { username } = req.params
+
+    const userToFollow = await User.findOne({ username })
+
+    if (!userToFollow) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    // 🚫 não pode seguir a si mesmo
+    if (userToFollow._id.equals(loggedUserId)) {
+      return res.status(400).json({ error: 'Você não pode seguir a si mesmo' })
+    }
+
+    // 🚫 evita follow duplicado
+    if (userToFollow.followers.includes(loggedUserId)) {
+      return res.status(409).json({ error: 'Você já segue esse usuário' })
+    }
+
+    await User.findByIdAndUpdate(userToFollow._id, {
+      $push: { followers: loggedUserId }
+    })
+
+    await User.findByIdAndUpdate(loggedUserId, {
+      $push: { following: userToFollow._id }
+    })
+
+    return res.json({ message: 'Usuário seguido com sucesso' })
+  } catch (err) {
+    console.error('Erro ao seguir usuário:', err)
+    return res.status(500).json({ error: 'Erro ao seguir usuário' })
+  }
+}
+
+/* ================= UNFOLLOW USER ================= */
+export const unfollowUser = async (req, res) => {
+  try {
+    const loggedUserId = req.user._id
+    const { username } = req.params
+
+    const userToUnfollow = await User.findOne({ username })
+
+    if (!userToUnfollow) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    await User.findByIdAndUpdate(userToUnfollow._id, {
+      $pull: { followers: loggedUserId }
+    })
+
+    await User.findByIdAndUpdate(loggedUserId, {
+      $pull: { following: userToUnfollow._id }
+    })
+
+    return res.json({ message: 'Unfollow realizado com sucesso' })
+  } catch (err) {
+    console.error('Erro ao dar unfollow:', err)
+    return res.status(500).json({ error: 'Erro ao dar unfollow' })
+  }
+}
+
+/* ================= FOLLOW STATUS ================= */
+export const getFollowStatus = async (req, res) => {
+  try {
+    const { username } = req.params
+    const loggedUserId = req.user._id
+
+    const targetUser = await User.findOne({ username })
+      .select('followers following')
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    const isSelf = targetUser._id.equals(loggedUserId)
+
+    const isFollowing = !isSelf
+      ? targetUser.followers.includes(loggedUserId)
+      : false
+
+    return res.json({
+      isSelf,
+      isFollowing,
+      followersCount: targetUser.followers.length,
+      followingCount: targetUser.following.length
+    })
+  } catch (error) {
+    console.error('Erro ao buscar follow-status:', error)
+    return res.status(500).json({ error: 'Erro interno do servidor' })
   }
 }

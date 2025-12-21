@@ -8,7 +8,9 @@ export const getPublicProfile = async (req, res) => {
 
     // 🔎 Buscar usuário
     const user = await User.findOne({ username })
-      .select('name username avatar bio')
+      .select(
+        'name username avatar bio profileBackground followers'
+      )
 
     if (!user) {
       return res.status(404).json({ error: 'Perfil não encontrado' })
@@ -20,10 +22,17 @@ export const getPublicProfile = async (req, res) => {
       isActive: true
     })
       .sort({ order: 1 })
-      .select('title url icon clicks')
+      .select('title url icon clicks likes')
 
     return res.json({
-      user,
+      user: {
+        name: user.name,
+        username: user.username,
+        avatar: user.avatar,
+        bio: user.bio,
+        profileBackground: user.profileBackground,
+        followersCount: user.followers.length
+      },
       links
     })
   } catch (error) {

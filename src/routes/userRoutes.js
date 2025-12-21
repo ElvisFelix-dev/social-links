@@ -1,9 +1,21 @@
 import { Router } from 'express'
 import passport from 'passport'
-import { googleLogin, getCurrentUser, updateProfile } from '../controllers/userController.js'
+
+import {
+  googleLogin,
+  getCurrentUser,
+  updateProfile,
+  followUser,
+  unfollowUser,
+  getFollowStatus
+} from '../controllers/userController.js'
+
+import uploadBackground from '../middleware/uploadBackground.js'
 import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = Router()
+
+/* ================= AUTH GOOGLE ================= */
 
 // 🔐 Inicia login com Google
 router.get(
@@ -20,8 +32,40 @@ router.get(
   googleLogin
 )
 
+/* ================= USUÁRIO LOGADO ================= */
+
+// 👤 Dados do usuário autenticado
 router.get('/me', authMiddleware, getCurrentUser)
 
-router.put('/profile', authMiddleware, updateProfile)
+// ✏️ Atualizar perfil (username, bio, background)
+router.put(
+  '/profile',
+  authMiddleware,
+  uploadBackground.single('profileBackground'),
+  updateProfile
+)
+
+/* ================= SOCIAL ================= */
+
+// 🔍 Status de follow (perfil público)
+router.get(
+  '/:username/follow-status',
+  authMiddleware,
+  getFollowStatus
+)
+
+// ➕ Follow
+router.post(
+  '/:username/follow',
+  authMiddleware,
+  followUser
+)
+
+// ➖ Unfollow
+router.delete(
+  '/:username/unfollow',
+  authMiddleware,
+  unfollowUser
+)
 
 export default router

@@ -16,7 +16,7 @@ router.use(authMiddleware)
 // ⚠️ rotas específicas PRIMEIRO
 router.put('/reorder/all', reorderLinks)
 router.post('/:linkId/like', toggleLike)
-
+1
 // depois as genéricas
 router.post('/', createLink)
 router.get('/', getMyLinks)

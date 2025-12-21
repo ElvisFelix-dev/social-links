@@ -4,7 +4,8 @@ import {
   getMyLinks,
   updateLink,
   deleteLink,
-  reorderLinks
+  reorderLinks,
+  toggleLike
 } from '../controllers/linkController.js'
 import { authMiddleware } from '../middleware/authMiddleware.js'
 
@@ -17,5 +18,6 @@ router.get('/', getMyLinks)
 router.put('/:id', updateLink)
 router.delete('/:id', deleteLink)
 router.put('/reorder/all', reorderLinks)
+router.post('/:linkId/like', authMiddleware, toggleLike)
 
 export default router

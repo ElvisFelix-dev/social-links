@@ -94,3 +94,28 @@ export const reorderLinks = async (req, res) => {
     return res.status(400).json({ error: 'Erro ao reordenar links' })
   }
 }
+
+export const toggleLike = async (req, res) => {
+  const userId = req.user.id
+  const { linkId } = req.params
+
+  const link = await Link.findById(linkId)
+  if (!link) {
+    return res.status(404).json({ error: 'Link não encontrado' })
+  }
+
+  const hasLiked = link.likes.includes(userId)
+
+  if (hasLiked) {
+    link.likes.pull(userId)
+  } else {
+    link.likes.push(userId)
+  }
+
+  await link.save()
+
+  return res.json({
+    liked: !hasLiked,
+    likesCount: link.likes.length
+  })
+}

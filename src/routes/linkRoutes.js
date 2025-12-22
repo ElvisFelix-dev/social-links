@@ -6,7 +6,7 @@ import {
   deleteLink,
   reorderLinks
 } from '../controllers/linkController.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
+import authMiddleware  from '../middleware/authMiddleware.js'
 
 const router = Router()
 

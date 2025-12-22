@@ -11,7 +11,7 @@ import {
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
+import  authMiddleware  from '../middleware/authMiddleware.js'
 
 const router = Router()
 

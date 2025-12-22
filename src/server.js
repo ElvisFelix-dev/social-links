@@ -9,9 +9,12 @@ dotenv.config()
 
 import './config/passport.js'
 
+import {testCloudinaryConnection} from './config/cloudinary.js'
+
 import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
+import likeRoutes from './routes/likeRoutes.js'
 
 const app = express()
 app.use(express.json())
@@ -27,9 +30,12 @@ app.get('/test-server', (req, res) => {
   res.send('Social Links online! ✅')
 })
 
+testCloudinaryConnection()
+
 app.use('/api/users', userRoutes)
 app.use('/api/links', linkRoutes)
 app.use('/api', publicRoutes)
+app.use('/api/likes', likeRoutes)
 
 const PORT = process.env.PORT || 3333
 app.listen(PORT, () => {

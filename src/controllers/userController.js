@@ -172,30 +172,31 @@ export const unfollowUser = async (req, res) => {
 /* ================= FOLLOW STATUS ================= */
 export const getFollowStatus = async (req, res) => {
   try {
+    const loggedUserId = req.user.id
     const { username } = req.params
-    const loggedUserId = req.user._id
 
     const targetUser = await User.findOne({ username })
-      .select('followers following')
+      .populate('followers')
+      .populate('following')
 
     if (!targetUser) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    const isSelf = targetUser._id.equals(loggedUserId)
+    const isSelf = targetUser._id.toString() === loggedUserId
 
-    const isFollowing = !isSelf
-      ? targetUser.followers.includes(loggedUserId)
-      : false
+    const isFollowing = targetUser.followers.some(
+      follower => follower._id.toString() === loggedUserId
+    )
 
-    return res.json({
+    res.json({
       isSelf,
       isFollowing,
       followersCount: targetUser.followers.length,
       followingCount: targetUser.following.length
     })
   } catch (error) {
-    console.error('Erro ao buscar follow-status:', error)
-    return res.status(500).json({ error: 'Erro interno do servidor' })
+    res.status(500).json({ error: 'Erro ao buscar follow status' })
   }
 }
+

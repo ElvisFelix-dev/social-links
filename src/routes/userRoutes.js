@@ -49,15 +49,16 @@ router.put(
 
 /* ================= SOCIAL ================= */
 
+// 📌 LISTAS (SEM AUTH)
+router.get('/profile/:username/followers', getFollowers)
+router.get('/profile/:username/following', getFollowing)
+
 // 🔍 Status de follow (perfil público)
 router.get(
   '/:username/follow-status',
   authMiddleware,
   getFollowStatus
 )
-
-router.get('/:username/followers', getFollowers)
-router.get('/:username/following', getFollowing)
 
 // ➕ Follow
 router.post(

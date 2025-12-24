@@ -200,3 +200,36 @@ export const getFollowStatus = async (req, res) => {
   }
 }
 
+export const getFollowers = async (req, res) => {
+  try {
+    const { username } = req.params
+
+    const user = await User.findOne({ username })
+      .populate('followers', 'username avatar')
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    res.json(user.followers)
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar seguidores' })
+  }
+}
+
+export const getFollowing = async (req, res) => {
+  try {
+    const { username } = req.params
+
+    const user = await User.findOne({ username })
+      .populate('following', 'username avatar')
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    res.json(user.following)
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar seguindo' })
+  }
+}

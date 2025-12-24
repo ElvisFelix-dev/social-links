@@ -9,7 +9,7 @@ export const getPublicProfile = async (req, res) => {
     // 🔎 Buscar usuário
     const user = await User.findOne({ username })
       .select(
-        'name username avatar bio profileBackground followers'
+        'name username avatar bio profileBackground followers email'
       )
 
     if (!user) {
@@ -30,6 +30,7 @@ export const getPublicProfile = async (req, res) => {
         username: user.username,
         avatar: user.avatar,
         bio: user.bio,
+        email: user.email,
         profileBackground: user.profileBackground,
         followersCount: user.followers.length
       },

@@ -7,7 +7,9 @@ import {
   updateProfile,
   followUser,
   unfollowUser,
-  getFollowStatus
+  getFollowStatus,
+  getFollowers,
+  getFollowing
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -53,6 +55,9 @@ router.get(
   authMiddleware,
   getFollowStatus
 )
+
+router.get('/:username/followers', getFollowers)
+router.get('/:username/following', getFollowing)
 
 // ➕ Follow
 router.post(

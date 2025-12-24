@@ -7,9 +7,20 @@ export const getPublicProfile = async (req, res) => {
     const { username } = req.params
 
     // 🔎 Buscar usuário
-    const user = await User.findOne({ username }).select(
-      'name username avatar bio profileBackground email followers following'
-    )
+    const user = await User.findOne({ username })
+      .select(
+        `
+          name
+          username
+          avatar
+          bio
+          email
+          profileBackground
+          isVerified
+          followers
+          following
+        `
+      )
 
     if (!user) {
       return res.status(404).json({ error: 'Perfil não encontrado' })
@@ -30,14 +41,17 @@ export const getPublicProfile = async (req, res) => {
         avatar: user.avatar,
         bio: user.bio,
         email: user.email,
-        profileBackground: user.profileBackground
+        profileBackground: user.profileBackground,
+        isVerified: user.isVerified, // ✅ selo
+        followersCount: user.followers.length,
+        followingCount: user.following.length
       },
-      followersCount: user.followers.length,
-      followingCount: user.following.length,
       links
     })
   } catch (error) {
     console.error('Erro ao buscar perfil público:', error)
-    return res.status(500).json({ error: 'Erro interno do servidor' })
+    return res.status(500).json({
+      error: 'Erro interno do servidor'
+    })
   }
 }

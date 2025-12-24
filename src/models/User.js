@@ -35,7 +35,13 @@ const userSchema = new mongoose.Schema(
       default: null
     },
 
-    // 🔹 NOVOS CAMPOS 🔹
+    // ✅ SELO DE VERIFICADO
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
+
+    /* ================= PERFIL ================= */
 
     profileBackground: {
       type: String,

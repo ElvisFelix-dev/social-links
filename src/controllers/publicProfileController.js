@@ -7,10 +7,9 @@ export const getPublicProfile = async (req, res) => {
     const { username } = req.params
 
     // 🔎 Buscar usuário
-    const user = await User.findOne({ username })
-      .select(
-        'name username avatar bio profileBackground followers email'
-      )
+    const user = await User.findOne({ username }).select(
+      'name username avatar bio profileBackground email followers following'
+    )
 
     if (!user) {
       return res.status(404).json({ error: 'Perfil não encontrado' })
@@ -31,9 +30,10 @@ export const getPublicProfile = async (req, res) => {
         avatar: user.avatar,
         bio: user.bio,
         email: user.email,
-        profileBackground: user.profileBackground,
-        followersCount: user.followers.length
+        profileBackground: user.profileBackground
       },
+      followersCount: user.followers.length,
+      followingCount: user.following.length,
       links
     })
   } catch (error) {

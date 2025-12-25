@@ -9,7 +9,8 @@ import {
   unfollowUser,
   getFollowStatus,
   getFollowers,
-  getFollowing
+  getFollowing,
+  getUserByUsername
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -53,6 +54,12 @@ router.put(
 // 📌 LISTAS (SEM AUTH)
 router.get('/profile/:username/followers', getFollowers)
 router.get('/profile/:username/following', getFollowing)
+
+router.get(
+  '/:username/follower',
+  optionalAuthMiddleware, // Opcional: caso queira saber se o user logado é o dono do perfil no futuro
+  getUserByUsername
+)
 
 // 🔍 Status de follow (perfil público)
 router.get(

@@ -328,3 +328,37 @@ export const getFollowing = async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar seguindo' })
   }
 }
+
+/* ================= GET USER BY USERNAME (PERFIL PÚBLICO) ================= */
+export const getUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.params
+
+    // Busca usuário e popula arrays de seguidores/seguindo apenas com o tamanho se necessário,
+    // mas aqui vamos pegar o objeto e contar via .length
+    const user = await User.findOne({ username })
+      .select('name avatar username bio profileBackground followers following createdAt')
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    // Retorna os dados públicos + contagens
+    return res.json({
+      _id: user._id,
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar,
+      bio: user.bio,
+      profileBackground: user.profileBackground,
+      createdAt: user.createdAt,
+      // 👇 AQUI ESTÁ A MÁGICA DOS NÚMEROS
+      followersCount: user.followers.length,
+      followingCount: user.following.length
+    })
+
+  } catch (err) {
+    console.error('Erro ao buscar perfil:', err)
+    return res.status(500).json({ error: 'Erro ao buscar perfil público' })
+  }
+}

@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import { sendWelcomeEmail } from '../utils/sendEmailWelcome.js'
+import { sendNewFollowerEmail } from '../utils/sendNewFollowerEmail.js'
 
 /* ================= LOGIN GOOGLE ================= */
 export const googleLogin = async (req, res) => {
@@ -147,6 +148,11 @@ export const followUser = async (req, res) => {
       return res.status(409).json({ error: 'Você já segue esse usuário' })
     }
 
+    // 🔎 usuário que está seguindo
+    const followerUser = await User.findById(loggedUserId)
+      .select('name username avatar')
+
+    // ✅ atualiza seguidores
     await User.findByIdAndUpdate(userToFollow._id, {
       $push: { followers: loggedUserId }
     })
@@ -154,6 +160,32 @@ export const followUser = async (req, res) => {
     await User.findByIdAndUpdate(loggedUserId, {
       $push: { following: userToFollow._id }
     })
+
+    // ✉️ envia e-mail de novo seguidor
+    if (userToFollow.email) {
+      try {
+        await sendNewFollowerEmail({
+          toEmail: userToFollow.email,
+          toName: userToFollow.name,
+          followerName: followerUser.name,
+          followerUsername: followerUser.username,
+          followerAvatar: followerUser.avatar
+        })
+
+        console.log(
+          `📧 Email de novo seguidor enviado para ${userToFollow.email}`
+        )
+      } catch (emailError) {
+        console.error(
+          `❌ Falha ao enviar email de novo seguidor para ${userToFollow.email}`,
+          emailError
+        )
+      }
+    } else {
+      console.log(
+        `ℹ️ Usuário ${userToFollow.username} não possui email para notificação`
+      )
+    }
 
     return res.json({ message: 'Usuário seguido com sucesso' })
   } catch (err) {

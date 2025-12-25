@@ -175,13 +175,13 @@ export const getFollowStatus = async (req, res) => {
     const { username } = req.params
 
     const targetUser = await User.findOne({ username })
-      .select('_id followers following')
+      .select('_id followers')
 
     if (!targetUser) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    // 🔓 visitante (não logado)
+    // visitante
     if (!req.user) {
       return res.json({
         isSelf: false,
@@ -190,20 +190,21 @@ export const getFollowStatus = async (req, res) => {
     }
 
     const loggedUserId = req.user._id.toString()
+    const targetUserId = targetUser._id.toString()
 
-    const isSelf = targetUser._id.toString() === loggedUserId
+    const isSelf = loggedUserId === targetUserId
 
     const isFollowing = targetUser.followers.some(
       id => id.toString() === loggedUserId
     )
 
-    res.json({
+    return res.json({
       isSelf,
       isFollowing
     })
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Erro ao buscar follow status' })
+    console.error('Follow status error:', error)
+    return res.status(500).json({ error: 'Erro ao buscar follow status' })
   }
 }
 

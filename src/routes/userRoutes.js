@@ -56,6 +56,7 @@ router.get('/profile/:username/following', getFollowing)
 // 🔍 Status de follow (perfil público)
 router.get(
   '/:username/follow-status',
+  authMiddleware,
   getFollowStatus
 )
 

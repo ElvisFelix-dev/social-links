@@ -1,7 +1,6 @@
 import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import User from '../models/User.js'
-
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -19,6 +18,7 @@ passport.use(
 
         let user = await User.findOne({ email })
 
+        // 🔹 NOVO USUÁRIO
         if (!user) {
           user = await User.create({
             name: profile.displayName,
@@ -27,6 +27,12 @@ passport.use(
             googleId: profile.id,
             username: email.split('@')[0]
           })
+
+          // 🔥 flag apenas em memória
+          user.isNewUser = true
+        } else {
+          // 🔹 USUÁRIO EXISTENTE
+          user.isNewUser = false
         }
 
         return done(null, user)

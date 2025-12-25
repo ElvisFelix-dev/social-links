@@ -1,23 +1,43 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
+import { sendWelcomeEmail } from '../utils/sendEmailWelcome.js'
 
 /* ================= LOGIN GOOGLE ================= */
-export const googleLogin = (req, res) => {
-  const user = req.user
+export const googleLogin = async (req, res) => {
+  try {
+    const user = req.user
 
-  if (!user) {
-    return res.status(401).json({ error: 'Autenticação falhou' })
+    if (!user) {
+      return res.status(401).json({ error: 'Autenticação falhou' })
+    }
+
+    // 🔐 Gera token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    // ✉️ Envia email SOMENTE se for novo usuário
+    if (user.isNewUser) {
+      try {
+        await sendWelcomeEmail({
+          name: user.name,
+          email: user.email
+        })
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError)
+        // não quebra o login por causa do email
+      }
+    }
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
+    )
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: 'Erro no login com Google' })
   }
-
-  const token = jwt.sign(
-    { id: user._id },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  )
-
-  return res.redirect(
-    `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
-  )
 }
 
 /* ================= GET CURRENT USER ================= */

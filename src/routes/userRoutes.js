@@ -14,6 +14,7 @@ import {
 
 import uploadBackground from '../middleware/uploadBackground.js'
 import  authMiddleware  from '../middleware/authMiddleware.js'
+import optionalAuthMiddleware from '../middleware/optionalAuthMiddleware.js'
 
 const router = Router()
 
@@ -56,7 +57,7 @@ router.get('/profile/:username/following', getFollowing)
 // 🔍 Status de follow (perfil público)
 router.get(
   '/:username/follow-status',
-  authMiddleware,
+  optionalAuthMiddleware,
   getFollowStatus
 )
 

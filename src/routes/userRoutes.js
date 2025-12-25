@@ -56,7 +56,7 @@ router.get('/profile/:username/followers', getFollowers)
 router.get('/profile/:username/following', getFollowing)
 
 router.get(
-  '/:username/follower',
+  '/:username',
   optionalAuthMiddleware, // Opcional: caso queira saber se o user logado é o dono do perfil no futuro
   getUserByUsername
 )

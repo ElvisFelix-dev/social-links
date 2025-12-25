@@ -227,17 +227,22 @@ export const getFollowStatus = async (req, res) => {
     const { username } = req.params
 
     const targetUser = await User.findOne({ username })
-      .select('_id followers')
+      .select('_id followers following')
 
     if (!targetUser) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    // visitante
+    const followersCount = targetUser.followers.length
+    const followingCount = targetUser.following.length
+
+    // 👤 VISITANTE
     if (!req.user) {
       return res.json({
         isSelf: false,
-        isFollowing: false
+        isFollowing: false,
+        followersCount,
+        followingCount
       })
     }
 
@@ -252,7 +257,9 @@ export const getFollowStatus = async (req, res) => {
 
     return res.json({
       isSelf,
-      isFollowing
+      isFollowing,
+      followersCount,
+      followingCount
     })
   } catch (error) {
     console.error('Follow status error:', error)

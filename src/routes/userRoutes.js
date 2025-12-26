@@ -11,7 +11,6 @@ import {
   getFollowers,
   getFollowing,
   getUserByUsername,
-  getUserSuggestions,
   getSuggestedUsers
 } from '../controllers/userController.js'
 
@@ -53,6 +52,8 @@ router.put(
 
 /* ================= SOCIAL ================= */
 
+router.get('/suggestions', getSuggestedUsers)
+
 // 📌 LISTAS (SEM AUTH)
 router.get('/profile/:username/followers', getFollowers)
 router.get('/profile/:username/following', getFollowing)
@@ -62,8 +63,6 @@ router.get(
   optionalAuthMiddleware, // Opcional: caso queira saber se o user logado é o dono do perfil no futuro
   getUserByUsername
 )
-
-router.get('/suggestions', getSuggestedUsers)
 
 // 🔍 Status de follow (perfil público)
 router.get(

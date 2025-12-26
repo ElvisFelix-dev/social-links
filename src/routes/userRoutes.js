@@ -10,7 +10,8 @@ import {
   getFollowStatus,
   getFollowers,
   getFollowing,
-  getUserByUsername
+  getUserByUsername,
+  getUserSuggestions
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -60,6 +61,8 @@ router.get(
   optionalAuthMiddleware, // Opcional: caso queira saber se o user logado é o dono do perfil no futuro
   getUserByUsername
 )
+
+router.get('/suggestions', optionalAuthMiddleware, getUserSuggestions)
 
 // 🔍 Status de follow (perfil público)
 router.get(

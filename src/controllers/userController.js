@@ -369,3 +369,29 @@ export const getUserByUsername = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao buscar perfil público' })
   }
 }
+
+export const getUserSuggestions = async (req, res) => {
+  try {
+    const loggedUserId = req.user?._id
+
+    const query = loggedUserId
+      ? { _id: { $ne: loggedUserId } }
+      : {}
+
+    const users = await User.aggregate([
+      { $match: query },
+      { $sample: { size: 5 } },
+      {
+        $project: {
+          name: 1,
+          username: 1,
+          avatar: 1
+        }
+      }
+    ])
+
+    res.json(users)
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao buscar sugestões' })
+  }
+}

@@ -11,7 +11,8 @@ import {
   getFollowers,
   getFollowing,
   getUserByUsername,
-  getUserSuggestions
+  getUserSuggestions,
+  getSuggestedUsers
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -62,7 +63,7 @@ router.get(
   getUserByUsername
 )
 
-router.get('/suggestions', getUserSuggestions)
+router.get('/suggestions', getSuggestedUsers)
 
 // 🔍 Status de follow (perfil público)
 router.get(

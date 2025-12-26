@@ -62,7 +62,7 @@ router.get(
   getUserByUsername
 )
 
-router.get('/suggestions', optionalAuthMiddleware, getUserSuggestions)
+router.get('/suggestions', getUserSuggestions)
 
 // 🔍 Status de follow (perfil público)
 router.get(

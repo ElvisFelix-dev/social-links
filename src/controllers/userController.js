@@ -370,28 +370,33 @@ export const getUserByUsername = async (req, res) => {
   }
 }
 
-export const getUserSuggestions = async (req, res) => {
+/* ================= SUGGESTED USERS ================= */
+export const getSuggestedUsers = async (req, res) => {
   try {
-    const loggedUserId = req.user?._id
+    const limit = Number(req.query.limit) || 5
+    const excludeUsername = req.query.exclude
 
-    const query = loggedUserId
-      ? { _id: { $ne: loggedUserId } }
+    const match = excludeUsername
+      ? { username: { $ne: excludeUsername } }
       : {}
 
     const users = await User.aggregate([
-      { $match: query },
-      { $sample: { size: 5 } },
+      { $match: match },
+      { $sample: { size: limit } },
       {
         $project: {
           name: 1,
           username: 1,
-          avatar: 1
+          avatar: 1,
+          followersCount: { $size: '$followers' }
         }
       }
     ])
 
-    res.json(users)
+    return res.json(users)
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao buscar sugestões' })
+    console.error('Erro ao buscar sugestões:', err)
+    return res.status(500).json({ error: 'Erro ao buscar sugestões' })
   }
 }
+

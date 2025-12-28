@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const sendWelcomeEmail = async ({ name, email }) => {
   return resend.emails.send({
-    from: 'LinksAll <onboarding@resend.dev>', // domínio precisa estar verificado
+    from: 'LinksAll <no-reply@test-vz9dlem5r614kj50.mlsender.net>', // domínio precisa estar verificado
     to: email,
     subject: 'Bem-vindo ao LinksAll 🚀',
     html: `

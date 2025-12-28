@@ -12,7 +12,7 @@ export const sendNewFollowerEmail = async ({
   const profileUrl = `${process.env.FRONTEND_URL}/${followerUsername}`
 
   return resend.emails.send({
-    from: 'LinksAll <onboarding@resend.dev>', // domínio verificado
+    from: 'LinksAll <no-reply@test-vz9dlem5r614kj50.mlsender.net>', // domínio verificado
     to: toEmail,
     subject: '🎉 Você tem um novo seguidor no LinksAll',
     html: `

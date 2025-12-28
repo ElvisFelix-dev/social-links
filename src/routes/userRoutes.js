@@ -11,7 +11,9 @@ import {
   getFollowers,
   getFollowing,
   getUserByUsername,
-  getSuggestedUsers
+  getSuggestedUsers,
+  exploreUsers,
+  searchUsers
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -51,6 +53,13 @@ router.put(
 )
 
 /* ================= SOCIAL ================= */
+
+// 🔍 EXPLORE (com search e category via query params)
+router.get(
+  '/explore',
+  optionalAuthMiddleware,
+  exploreUsers
+)
 
 router.get('/suggestions', getSuggestedUsers)
 

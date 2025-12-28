@@ -4,19 +4,25 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     email: {
       type: String,
       unique: true,
-      required: true
+      required: true,
+      lowercase: true,
+      index: true
     },
 
     username: {
       type: String,
       unique: true,
-      required: true
+      required: true,
+      lowercase: true,
+      trim: true,
+      index: true
     },
 
     avatar: {
@@ -35,10 +41,12 @@ const userSchema = new mongoose.Schema(
       default: null
     },
 
-    // ✅ SELO DE VERIFICADO
+    /* ================= STATUS ================= */
+
     isVerified: {
       type: Boolean,
-      default: false
+      default: false,
+      index: true
     },
 
     /* ================= PERFIL ================= */
@@ -48,21 +56,60 @@ const userSchema = new mongoose.Schema(
       default: ''
     },
 
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ],
+    /* ================= SOCIAL ================= */
 
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ]
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+
+    /* ================= EXPLORE ================= */
+
+    categories: {
+      type: [String],
+      enum: ['Criadores', 'Negócios', 'Desenvolvedores', 'Design', 'Marketing'],
+      index: true
+    }
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 )
+
+/* ================= VIRTUALS ================= */
+
+userSchema.virtual('followersCount').get(function () {
+  return this.followers?.length || 0
+})
+
+userSchema.virtual('followingCount').get(function () {
+  return this.following?.length || 0
+})
+
+userSchema.virtual('isProfileComplete').get(function () {
+  return Boolean(this.avatar && this.bio)
+})
+
+/* ================= INDEXES ================= */
+
+// busca textual
+userSchema.index({
+  name: 'text',
+  username: 'text',
+  bio: 'text'
+})
+
+// ranking / explore
+userSchema.index({
+  isVerified: -1,
+  createdAt: -1
+})
 
 export default mongoose.model('User', userSchema)

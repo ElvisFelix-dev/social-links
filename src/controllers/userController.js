@@ -400,3 +400,80 @@ export const getSuggestedUsers = async (req, res) => {
   }
 }
 
+/* ================= EXPLORE USERS ================= */
+export const exploreUsers = async (req, res) => {
+  try {
+    const { search, category } = req.query
+    const limit = Number(req.query.limit) || 20
+    const loggedUserId = req.user?._id
+
+    const query = {}
+
+    // 🔎 Busca textual
+    if (search) {
+      query.$text = { $search: search }
+    }
+
+    // 🏷️ Categoria
+    if (category) {
+      query.categories = category
+    }
+
+    // 🚫 Exclui o próprio usuário
+    if (loggedUserId) {
+      query._id = { $ne: loggedUserId }
+    }
+
+    const users = await User.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          followersCount: { $size: '$followers' }
+        }
+      },
+      {
+        $sort: {
+          isVerified: -1,
+          followersCount: -1,
+          createdAt: -1
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          username: 1,
+          avatar: 1,
+          bio: 1,
+          categories: 1,
+          followersCount: 1,
+          isVerified: 1
+        }
+      },
+      { $limit: limit }
+    ])
+
+    res.json(users)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao buscar perfis' })
+  }
+}
+
+
+export const searchUsers = async (req, res) => {
+  try {
+    const q = req.query.q
+
+    if (!q) return res.json([])
+
+    const users = await User.find(
+      { $text: { $search: q } },
+      'name username avatar'
+    ).limit(20)
+
+    res.json(users)
+  } catch (err) {
+    res.status(500).json({ error: 'Erro na busca' })
+  }
+}
+

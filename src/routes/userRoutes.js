@@ -61,7 +61,7 @@ router.get(
   exploreUsers
 )
 
-router.get('/suggestions', getSuggestedUsers)
+router.get('/suggestions', authMiddleware, getSuggestedUsers)
 
 // 📌 LISTAS (SEM AUTH)
 router.get('/profile/:username/followers', getFollowers)

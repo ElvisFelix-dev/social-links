@@ -3,6 +3,8 @@ import User from '../models/User.js'
 import { sendWelcomeEmail } from '../utils/sendEmailWelcome.js'
 import { sendNewFollowerEmail } from '../utils/sendNewFollowerEmail.js'
 
+import {ALLOWED_CATEGORIES} from '../constants/categories.js'
+
 /* ================= LOGIN GOOGLE ================= */
 export const googleLogin = async (req, res) => {
   try {
@@ -81,16 +83,18 @@ export const updateProfile = async (req, res) => {
       return res.status(401).json({ error: 'Usuário não autenticado' })
     }
 
-    // 🔹 Para segurança: req.body pode vir undefined com multipart/form-data
-    const username = req.body?.username
-    const bio = req.body?.bio
+    const { username, bio, categories } = req.body
+
+    /* ================= VALIDAR USERNAME ================= */
 
     if (!username || !username.trim()) {
       return res.status(400).json({ error: 'Username é obrigatório' })
     }
 
+    const normalizedUsername = username.trim().toLowerCase()
+
     const existingUser = await User.findOne({
-      username: username.trim(),
+      username: normalizedUsername,
       _id: { $ne: userId }
     })
 
@@ -98,16 +102,42 @@ export const updateProfile = async (req, res) => {
       return res.status(409).json({ error: 'Username já está em uso' })
     }
 
-    // 🧠 Monta update dinâmico
+    /* ================= MONTAR UPDATE ================= */
+
     const updateData = {
-      username: username.trim(),
+      username: normalizedUsername,
       bio: bio?.substring(0, 160) || ''
     }
 
-    // 🖼️ BACKGROUND VIA MULTER + CLOUDINARY
+    /* ================= CATEGORIES ================= */
+
+    if (categories) {
+      // multipart pode vir como string
+      const parsedCategories = Array.isArray(categories)
+        ? categories
+        : JSON.parse(categories)
+
+      const invalidCategories = parsedCategories.filter(
+        c => !ALLOWED_CATEGORIES.includes(c)
+      )
+
+      if (invalidCategories.length > 0) {
+        return res.status(400).json({
+          error: 'Categorias inválidas',
+          invalidCategories
+        })
+      }
+
+      updateData.categories = parsedCategories
+    }
+
+    /* ================= BACKGROUND ================= */
+
     if (req.file?.path) {
       updateData.profileBackground = req.file.path
     }
+
+    /* ================= UPDATE ================= */
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -115,7 +145,8 @@ export const updateProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-        select: 'name avatar username email bio profileBackground'
+        select:
+          'name avatar username email bio profileBackground categories'
       }
     )
 
@@ -374,14 +405,27 @@ export const getUserByUsername = async (req, res) => {
 export const getSuggestedUsers = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 5
-    const excludeUsername = req.query.exclude
+    const loggedUserId = req.user._id
 
-    const match = excludeUsername
-      ? { username: { $ne: excludeUsername } }
-      : {}
+    // 🔎 Busca quem o usuário já segue
+    const loggedUser = await User.findById(loggedUserId)
+      .select('following')
+
+    if (!loggedUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
 
     const users = await User.aggregate([
-      { $match: match },
+      {
+        $match: {
+          _id: {
+            // 🚫 remove o próprio usuário
+            $ne: loggedUserId,
+            // 🚫 remove quem ele já segue
+            $nin: loggedUser.following
+          }
+        }
+      },
       { $sample: { size: limit } },
       {
         $project: {

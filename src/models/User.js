@@ -56,6 +56,17 @@ const userSchema = new mongoose.Schema(
       default: ''
     },
 
+    notificationSettings: {
+      welcomeEmail: {
+        type: Boolean,
+        default: true
+      },
+      newFollowerEmail: {
+        type: Boolean,
+        default: true
+      }
+    },
+
     /* ================= SOCIAL ================= */
 
     followers: [{

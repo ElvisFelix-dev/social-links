@@ -17,23 +17,27 @@ export const googleLogin = async (req, res) => {
       return res.status(401).json({ error: 'Autenticação falhou' })
     }
 
-    // 🔐 Gera token
+    // 🔐 Gera token JWT
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     )
 
-    // ✉️ Envia email SOMENTE se for novo usuário
-    if (user.isNewUser) {
+    // ✉️ Email de boas-vindas (somente 1x)
+    if (user.welcomeEmailSent !== true && user.email) {
       try {
+        // marca antes para evitar envio duplicado
+        user.welcomeEmailSent = true
+        await user.save()
+
         await sendWelcomeEmail({
           name: user.name,
           email: user.email
         })
-      } catch (emailError) {
-        console.error('Erro ao enviar email de boas-vindas:', emailError)
-        // não quebra o login por causa do email
+      } catch (err) {
+        console.error('❌ Erro ao enviar email de boas-vindas:', err)
+        // login NÃO falha por causa do email
       }
     }
 
@@ -41,7 +45,7 @@ export const googleLogin = async (req, res) => {
       `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
     )
   } catch (error) {
-    console.error(error)
+    console.error('❌ Erro no googleLogin:', error)
     return res.status(500).json({ error: 'Erro no login com Google' })
   }
 }
@@ -171,38 +175,48 @@ export const followUser = async (req, res) => {
     const loggedUserId = req.user._id
     const { username } = req.params
 
-    // 🔎 usuário a ser seguido
+    // 🔎 Usuário a ser seguido
     const userToFollow = await User.findOne({ username }).session(session)
 
     if (!userToFollow) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    // 🚫 não pode seguir a si mesmo
+    // 🚫 Não pode seguir a si mesmo
     if (userToFollow._id.equals(loggedUserId)) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(400).json({
         error: 'Você não pode seguir a si mesmo'
       })
     }
 
-    // 🚫 evita follow duplicado (forma performática)
+    // 🚫 Evita follow duplicado (com session)
     const alreadyFollowing = await User.exists({
       _id: userToFollow._id,
       followers: loggedUserId
-    })
+    }).session(session)
 
     if (alreadyFollowing) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(409).json({
         error: 'Você já segue esse usuário'
       })
     }
 
-    // 🔎 usuário que está seguindo
+    // 🔎 Usuário que está seguindo
     const followerUser = await User.findById(loggedUserId)
       .select('name username avatar')
       .session(session)
 
-    // ✅ atualiza seguidores e seguindo (atomicamente)
+    if (!followerUser) {
+      throw new Error('Usuário seguidor não encontrado')
+    }
+
+    // ✅ Atualiza seguidores e seguindo
     await User.updateOne(
       { _id: userToFollow._id },
       { $addToSet: { followers: loggedUserId } },
@@ -215,14 +229,23 @@ export const followUser = async (req, res) => {
       { session }
     )
 
-    // 🔔 cria notificação
-    await Notification.create([{
-      user: userToFollow._id,
-      fromUser: loggedUserId,
-      type: 'follow'
-    }], { session })
+    // 🔔 Cria notificação
+    await Notification.create(
+      [
+        {
+          user: userToFollow._id,
+          fromUser: loggedUserId,
+          type: 'follow'
+        }
+      ],
+      { session }
+    )
 
-    // ✉️ envia e-mail (fora da lógica crítica)
+    // ✅ Commita tudo antes de efeitos colaterais
+    await session.commitTransaction()
+    session.endSession()
+
+    // ✉️ Envia email (fora da transaction)
     if (userToFollow.email) {
       sendNewFollowerEmail({
         toEmail: userToFollow.email,
@@ -236,10 +259,11 @@ export const followUser = async (req, res) => {
           err
         )
       })
+    } else {
+      console.warn(
+        `⚠️ Usuário ${userToFollow.username} não possui email cadastrado`
+      )
     }
-
-    await session.commitTransaction()
-    session.endSession()
 
     return res.json({
       message: 'Usuário seguido com sucesso'

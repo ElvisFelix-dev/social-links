@@ -41,13 +41,13 @@ app.get('/test-server', (req, res) => {
 })
 
 /* ======================
-   OG PREVIEW (BOTS)
+   OG PREVIEW (BOTS ONLY)
 ====================== */
 app.get('/:username', async (req, res, next) => {
   const { username } = req.params
   const userAgent = req.headers['user-agent'] || ''
 
-  // ignora rotas que não são perfil
+  // ignora chamadas que não são perfil público
   if (
     username.startsWith('api') ||
     username.includes('.') ||
@@ -56,7 +56,7 @@ app.get('/:username', async (req, res, next) => {
     return next()
   }
 
-  // se não for bot → frontend
+  // Usuário normal → frontend
   if (!isBot(userAgent)) {
     return res.redirect(
       `${process.env.FRONTEND_URL}/${username}`
@@ -64,47 +64,52 @@ app.get('/:username', async (req, res, next) => {
   }
 
   try {
-    const user = await User.findOne({ username })
+    const user = await User.findOne({ username }).select(
+      'name bio avatar username'
+    )
 
     if (!user) {
       return res.redirect(process.env.FRONTEND_URL)
     }
 
+    // Avatar seguro para OG
     const avatar =
       user.avatar ||
-      'https://res.cloudinary.com/linksall/image/upload/og-default.png'
+      'https://res.cloudinary.com/linksall/image/upload/v1/og-default.png'
 
     res.set('Content-Type', 'text/html')
 
-    return res.send(`
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>${user.name} • LinksAll</title>
+    return res.send(`<!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <title>${user.name} • LinksAll</title>
 
-  <meta property="og:type" content="profile" />
-  <meta property="og:title" content="${user.name}" />
-  <meta property="og:description" content="${user.bio || 'Veja meus links no LinksAll'}" />
-  <meta property="og:image" content="${avatar}" />
-  <meta property="og:url" content="${process.env.FRONTEND_URL}/${user.username}" />
+      <!-- Open Graph -->
+      <meta property="og:type" content="profile" />
+      <meta property="og:title" content="${user.name}" />
+      <meta property="og:description" content="${user.bio || 'Veja meus links no LinksAll'}" />
+      <meta property="og:image" content="${avatar}" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content="${process.env.FRONTEND_URL}/${user.username}" />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${user.name}" />
-  <meta name="twitter:description" content="${user.bio || 'Veja meus links no LinksAll'}" />
-  <meta name="twitter:image" content="${avatar}" />
-</head>
-<body></body>
-</html>
-    `)
+      <!-- Twitter -->
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="${user.name}" />
+      <meta name="twitter:description" content="${user.bio || 'Veja meus links no LinksAll'}" />
+      <meta name="twitter:image" content="${avatar}" />
+    </head>
+    <body></body>
+    </html>`)
   } catch (err) {
-    console.error('❌ OG error:', err)
+    console.error('❌ OG Preview error:', err)
     return res.redirect(process.env.FRONTEND_URL)
   }
 })
 
 /* ======================
-   API
+   API ROUTES
 ====================== */
 app.use('/api/users', userRoutes)
 app.use('/api/links', linkRoutes)

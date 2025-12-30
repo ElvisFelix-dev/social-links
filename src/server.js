@@ -18,6 +18,24 @@ import likeRoutes from './routes/likeRoutes.js'
 
 const app = express()
 
+// ===== ROBOTS.TXT =====
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain')
+  res.send(`
+    User-agent: *
+    Allow: /
+
+    User-agent: facebookexternalhit
+    Allow: /
+
+    User-agent: Twitterbot
+    Allow: /
+
+    User-agent: WhatsApp
+    Allow: /
+  `)
+})
+
 /* ======================
    BASE
 ====================== */

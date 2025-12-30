@@ -74,8 +74,9 @@ app.get('/:username', async (req, res, next) => {
 
     // Avatar seguro para OG
     const avatar =
-      user.avatar ||
-      'https://res.cloudinary.com/linksall/image/upload/v1/og-default.png'
+      user.avatar && user.avatar.includes('cloudinary')
+      ? user.avatar.replace('/upload/', '/upload/w_1200,h_630,c_fill/')
+      : 'https://res.cloudinary.com/linksall/image/upload/w_1200,h_630,c_fill/og-default.png'
 
     res.set('Content-Type', 'text/html')
 

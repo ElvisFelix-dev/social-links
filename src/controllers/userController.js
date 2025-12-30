@@ -229,6 +229,8 @@ export const followUser = async (req, res) => {
       { session }
     )
 
+    console.log('🔔 Notificação criada:', notification)
+
     // 🔔 Cria notificação
     await Notification.create(
       [

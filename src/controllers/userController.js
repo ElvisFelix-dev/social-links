@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
+
 import User from '../models/User.js'
 import { sendWelcomeEmail } from '../utils/sendEmailWelcome.js'
 import { sendNewFollowerEmail } from '../utils/sendNewFollowerEmail.js'

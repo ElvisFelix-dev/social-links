@@ -15,6 +15,7 @@ import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
 
 const app = express()
 
@@ -130,6 +131,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/links', linkRoutes)
 app.use('/api', publicRoutes)
 app.use('/api/likes', likeRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 /* ======================
    CLOUDINARY

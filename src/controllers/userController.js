@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import { sendWelcomeEmail } from '../utils/sendEmailWelcome.js'
 import { sendNewFollowerEmail } from '../utils/sendNewFollowerEmail.js'
+import Notification from '../models/Notification.js'
 
 import {ALLOWED_CATEGORIES} from '../constants/categories.js'
 
@@ -158,12 +159,18 @@ export const updateProfile = async (req, res) => {
 }
 
 /* ================= FOLLOW USER ================= */
+
 export const followUser = async (req, res) => {
+  const session = await mongoose.startSession()
+
   try {
+    session.startTransaction()
+
     const loggedUserId = req.user._id
     const { username } = req.params
 
-    const userToFollow = await User.findOne({ username })
+    // 🔎 usuário a ser seguido
+    const userToFollow = await User.findOne({ username }).session(session)
 
     if (!userToFollow) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
@@ -171,84 +178,154 @@ export const followUser = async (req, res) => {
 
     // 🚫 não pode seguir a si mesmo
     if (userToFollow._id.equals(loggedUserId)) {
-      return res.status(400).json({ error: 'Você não pode seguir a si mesmo' })
+      return res.status(400).json({
+        error: 'Você não pode seguir a si mesmo'
+      })
     }
 
-    // 🚫 evita follow duplicado
-    if (userToFollow.followers.includes(loggedUserId)) {
-      return res.status(409).json({ error: 'Você já segue esse usuário' })
+    // 🚫 evita follow duplicado (forma performática)
+    const alreadyFollowing = await User.exists({
+      _id: userToFollow._id,
+      followers: loggedUserId
+    })
+
+    if (alreadyFollowing) {
+      return res.status(409).json({
+        error: 'Você já segue esse usuário'
+      })
     }
 
     // 🔎 usuário que está seguindo
     const followerUser = await User.findById(loggedUserId)
       .select('name username avatar')
+      .session(session)
 
-    // ✅ atualiza seguidores
-    await User.findByIdAndUpdate(userToFollow._id, {
-      $push: { followers: loggedUserId }
-    })
+    // ✅ atualiza seguidores e seguindo (atomicamente)
+    await User.updateOne(
+      { _id: userToFollow._id },
+      { $addToSet: { followers: loggedUserId } },
+      { session }
+    )
 
-    await User.findByIdAndUpdate(loggedUserId, {
-      $push: { following: userToFollow._id }
-    })
+    await User.updateOne(
+      { _id: loggedUserId },
+      { $addToSet: { following: userToFollow._id } },
+      { session }
+    )
 
-    // ✉️ envia e-mail de novo seguidor
+    // 🔔 cria notificação
+    await Notification.create([{
+      user: userToFollow._id,
+      fromUser: loggedUserId,
+      type: 'follow'
+    }], { session })
+
+    // ✉️ envia e-mail (fora da lógica crítica)
     if (userToFollow.email) {
-      try {
-        await sendNewFollowerEmail({
-          toEmail: userToFollow.email,
-          toName: userToFollow.name,
-          followerName: followerUser.name,
-          followerUsername: followerUser.username,
-          followerAvatar: followerUser.avatar
-        })
-
-        console.log(
-          `📧 Email de novo seguidor enviado para ${userToFollow.email}`
-        )
-      } catch (emailError) {
+      sendNewFollowerEmail({
+        toEmail: userToFollow.email,
+        toName: userToFollow.name,
+        followerName: followerUser.name,
+        followerUsername: followerUser.username,
+        followerAvatar: followerUser.avatar
+      }).catch(err => {
         console.error(
           `❌ Falha ao enviar email de novo seguidor para ${userToFollow.email}`,
-          emailError
+          err
         )
-      }
-    } else {
-      console.log(
-        `ℹ️ Usuário ${userToFollow.username} não possui email para notificação`
-      )
+      })
     }
 
-    return res.json({ message: 'Usuário seguido com sucesso' })
+    await session.commitTransaction()
+    session.endSession()
+
+    return res.json({
+      message: 'Usuário seguido com sucesso'
+    })
   } catch (err) {
+    await session.abortTransaction()
+    session.endSession()
+
     console.error('Erro ao seguir usuário:', err)
-    return res.status(500).json({ error: 'Erro ao seguir usuário' })
+
+    return res.status(500).json({
+      error: 'Erro ao seguir usuário'
+    })
   }
 }
 
-/* ================= UNFOLLOW USER ================= */
 export const unfollowUser = async (req, res) => {
+  const session = await mongoose.startSession()
+
   try {
+    session.startTransaction()
+
     const loggedUserId = req.user._id
     const { username } = req.params
 
-    const userToUnfollow = await User.findOne({ username })
+    // 🔎 usuário a ser deixado de seguir
+    const userToUnfollow = await User.findOne({ username }).session(session)
 
     if (!userToUnfollow) {
-      return res.status(404).json({ error: 'Usuário não encontrado' })
+      return res.status(404).json({
+        error: 'Usuário não encontrado'
+      })
     }
 
-    await User.findByIdAndUpdate(userToUnfollow._id, {
-      $pull: { followers: loggedUserId }
+    // 🚫 não pode dar unfollow em si mesmo
+    if (userToUnfollow._id.equals(loggedUserId)) {
+      return res.status(400).json({
+        error: 'Você não pode dar unfollow em si mesmo'
+      })
+    }
+
+    // 🔎 verifica se realmente está seguindo
+    const isFollowing = await User.exists({
+      _id: loggedUserId,
+      following: userToUnfollow._id
     })
 
-    await User.findByIdAndUpdate(loggedUserId, {
-      $pull: { following: userToUnfollow._id }
-    })
+    if (!isFollowing) {
+      return res.status(409).json({
+        error: 'Você não segue esse usuário'
+      })
+    }
 
-    return res.json({ message: 'Unfollow realizado com sucesso' })
+    // ✅ remove follow de forma atômica
+    await User.updateOne(
+      { _id: userToUnfollow._id },
+      { $pull: { followers: loggedUserId } },
+      { session }
+    )
+
+    await User.updateOne(
+      { _id: loggedUserId },
+      { $pull: { following: userToUnfollow._id } },
+      { session }
+    )
+
+    // 🔕 remove notificação de follow (opcional)
+    await Notification.deleteMany({
+      user: userToUnfollow._id,
+      fromUser: loggedUserId,
+      type: 'follow'
+    }).session(session)
+
+    await session.commitTransaction()
+    session.endSession()
+
+    return res.json({
+      message: 'Unfollow realizado com sucesso'
+    })
   } catch (err) {
+    await session.abortTransaction()
+    session.endSession()
+
     console.error('Erro ao dar unfollow:', err)
-    return res.status(500).json({ error: 'Erro ao dar unfollow' })
+
+    return res.status(500).json({
+      error: 'Erro ao dar unfollow'
+    })
   }
 }
 

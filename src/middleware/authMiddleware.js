@@ -5,15 +5,16 @@ const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
 
+    // 1️⃣ Token não enviado
     if (!authHeader) {
       return res.status(401).json({
         error: 'Token não fornecido'
       })
     }
 
-    // Aceita "Bearer token" ou só "token"
+    // 2️⃣ Aceita "Bearer token" ou só "token"
     const token = authHeader.startsWith('Bearer ')
-      ? authHeader.split(' ')[1]
+      ? authHeader.slice(7)
       : authHeader
 
     if (!token) {
@@ -22,24 +23,38 @@ const authMiddleware = async (req, res, next) => {
       })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-    const user = await User.findById(decoded.id).select('-password -googleId')
-
-    if (!user) {
+    // 3️⃣ Verifica e decodifica o token
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
+    } catch (err) {
       return res.status(401).json({
-        error: 'Usuário não encontrado'
+        error: err.name === 'TokenExpiredError'
+          ? 'Token expirado'
+          : 'Token inválido'
       })
     }
 
-    // 🔥 Padrão profissional
+    // 4️⃣ Garante que o usuário ainda existe
+    const user = await User.findById(decoded.id)
+      .select('-password -googleId')
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'Usuário não existe mais'
+      })
+    }
+
+    // 5️⃣ Injeta dados do usuário na request
     req.user = user
     req.userId = user._id
 
     next()
   } catch (error) {
-    return res.status(401).json({
-      error: 'Token expirado ou inválido'
+    console.error('AuthMiddleware error:', error)
+
+    return res.status(500).json({
+      error: 'Erro interno de autenticação'
     })
   }
 }

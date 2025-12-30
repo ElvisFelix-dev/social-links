@@ -74,19 +74,19 @@ passport.use(
             username: email.split('@')[0]
           })
 
-          user.isNewUser = true
+          // ✅ flag temporária (não salva no banco)
+          user._isNewUser = true
         } else {
           /* ======================
              USUÁRIO EXISTENTE
           ====================== */
 
-          // Atualiza avatar apenas se ainda não for Cloudinary
           if (!user.avatar && avatarUrl) {
             user.avatar = avatarUrl
             await user.save()
           }
 
-          user.isNewUser = false
+          user._isNewUser = false
         }
 
         return done(null, user)

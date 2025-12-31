@@ -112,10 +112,14 @@ export const updateProfile = async (req, res) => {
     if (bio !== undefined) updateData.bio = bio;
 
     /* ================= CATEGORY ================= */
+    // No seu controller updateProfile
+
+/* ================= CATEGORY ================= */
     if (!category) {
       return res.status(400).json({ error: 'Categoria é obrigatória' });
     }
 
+    // Verifica se a categoria enviada está na lista permitida
     if (!ALLOWED_CATEGORIES.includes(category)) {
       return res.status(400).json({
         error: 'Categoria inválida',
@@ -123,12 +127,10 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    updateData.category = category;
-
-    /* ================= BACKGROUND ================= */
-    if (req.file?.path) {
-      updateData.profileBackground = req.file.path;
-    }
+    // AQUI ESTÁ O PULO DO GATO:
+    // Em vez de: updateData.category = category;
+    // Faça isso (se seu schema for um array):
+    updateData.categories = [category];
 
     /* ================= UPDATE ================= */
     const updatedUser = await User.findByIdAndUpdate(
@@ -137,7 +139,8 @@ export const updateProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-        select: 'name avatar username email bio profileBackground category'
+        // Garanta que está retornando 'categories' e não 'category'
+        select: 'name avatar username email bio profileBackground categories'
       }
     );
 

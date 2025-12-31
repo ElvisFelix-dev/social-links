@@ -133,24 +133,38 @@ export const updateProfile = async (req, res) => {
 
     /* ================= CATEGORIES ================= */
 
-    if (categories) {
-      // multipart pode vir como string
-      const parsedCategories = Array.isArray(categories)
-        ? categories
-        : JSON.parse(categories)
+    if (categories !== undefined) {
+      let parsedCategory
 
-      const invalidCategories = parsedCategories.filter(
-        c => !ALLOWED_CATEGORIES.includes(c)
-      )
-
-      if (invalidCategories.length > 0) {
+      try {
+        // multipart pode vir como string JSON ou string simples
+        if (Array.isArray(categories)) {
+          parsedCategory = categories[0] // garante só 1
+        } else if (typeof categories === 'string') {
+          const parsed = JSON.parse(categories)
+          parsedCategory = Array.isArray(parsed) ? parsed[0] : parsed
+        }
+      } catch (err) {
         return res.status(400).json({
-          error: 'Categorias inválidas',
-          invalidCategories
+          error: 'Formato inválido de categoria'
         })
       }
 
-      updateData.categories = parsedCategories
+      if (!parsedCategory) {
+        return res.status(400).json({
+          error: 'Categoria é obrigatória'
+        })
+      }
+
+      if (!ALLOWED_CATEGORIES.includes(parsedCategory)) {
+        return res.status(400).json({
+          error: 'Categoria inválida',
+          allowedCategories: ALLOWED_CATEGORIES
+        })
+      }
+
+      // salva como string (1 categoria por user)
+      updateData.category = parsedCategory
     }
 
     /* ================= BACKGROUND ================= */

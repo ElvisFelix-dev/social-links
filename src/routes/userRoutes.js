@@ -68,7 +68,8 @@ router.get('/suggestions', getSuggestedUsers)
 router.get('/suggestions-users', getUserSuggestions)
 router.get('/suggestions-by-category', getSuggestionsByCategory)
 // Lista usuários por categoria
-router.get('/category/:category', getUsersByCategory);
+router.get('/:category', getUsersByCategory);
+router.get('/search', searchUsers)
 
 // 📌 LISTAS (SEM AUTH)
 router.get('/profile/:username/followers', getFollowers)

@@ -11,6 +11,8 @@ import User from './models/User.js'
 import { isBot } from './utils/isBot.js'
 import { testCloudinaryConnection } from './config/cloudinary.js'
 
+import testRoutes from './routes/test.routes.js'
+
 import userRoutes from './routes/userRoutes.js'
 import linkRoutes from './routes/linkRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
@@ -132,6 +134,8 @@ app.use('/api/links', linkRoutes)
 app.use('/api', publicRoutes)
 app.use('/api/likes', likeRoutes)
 app.use('/api/notifications', notificationRoutes)
+
+app.use('/api/test', testRoutes)
 
 /* ======================
    CLOUDINARY

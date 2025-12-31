@@ -681,16 +681,19 @@ export const getUserSuggestions = async (req, res) => {
 
 export const getSuggestionsByCategory = async (req, res) => {
   try {
-    const loggedUserId = req.user._id
+    const loggedUserId = req.user?._id // 👈 seguro
+
+    const match = loggedUserId
+      ? { _id: { $ne: loggedUserId } }
+      : {}
 
     const users = await User.aggregate([
+      { $match: match },
       {
         $match: {
-          _id: { $ne: loggedUserId },
           categories: { $exists: true, $ne: [] }
         }
       },
-      { $sample: { size: 15 } },
       {
         $project: {
           name: 1,
@@ -699,14 +702,16 @@ export const getSuggestionsByCategory = async (req, res) => {
           categories: 1,
           isVerified: 1
         }
-      }
+      },
+      { $sample: { size: 15 } }
     ])
 
     res.json(users)
   } catch (err) {
-    console.error(err)
+    console.error('Erro em getSuggestionsByCategory:', err)
     res.status(500).json({ error: 'Erro ao buscar sugestões' })
   }
 }
+
 
 

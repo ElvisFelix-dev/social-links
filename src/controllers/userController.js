@@ -107,34 +107,23 @@ export const updateProfile = async (req, res) => {
 
     /* ================= USERNAME ================= */
     if (username) updateData.username = username.trim();
+
+    /* ================= BIO ================= */
     if (bio !== undefined) updateData.bio = bio;
 
     /* ================= CATEGORY ================= */
-    if (category !== undefined) {
-      let parsedCategory;
-
-      if (typeof category === 'string') {
-        try {
-          const parsed = JSON.parse(category);
-          parsedCategory = Array.isArray(parsed) ? parsed[0] : parsed;
-        } catch {
-          parsedCategory = category; // se não for JSON, usa direto
-        }
-      }
-
-      if (!parsedCategory) {
-        return res.status(400).json({ error: 'Categoria é obrigatória' });
-      }
-
-      if (!ALLOWED_CATEGORIES.includes(parsedCategory)) {
-        return res.status(400).json({
-          error: 'Categoria inválida',
-          allowedCategories: ALLOWED_CATEGORIES
-        });
-      }
-
-      updateData.category = parsedCategory;
+    if (!category) {
+      return res.status(400).json({ error: 'Categoria é obrigatória' });
     }
+
+    if (!ALLOWED_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        error: 'Categoria inválida',
+        allowedCategories: ALLOWED_CATEGORIES
+      });
+    }
+
+    updateData.category = category;
 
     /* ================= BACKGROUND ================= */
     if (req.file?.path) {
@@ -153,8 +142,14 @@ export const updateProfile = async (req, res) => {
     );
 
     return res.json(updatedUser);
+
   } catch (err) {
     console.error('Erro ao atualizar perfil:', err);
+
+    if (err.code === 11000 && err.keyValue?.username) {
+      return res.status(409).json({ error: 'Username já está em uso' });
+    }
+
     return res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
 };

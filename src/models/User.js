@@ -81,10 +81,11 @@ const userSchema = new mongoose.Schema(
 
     /* ================= EXPLORE ================= */
 
-    categories: {
-      type: [String],
+    category: { // <--- ALTERAÇÃO: string única
+      type: String,
       enum: ['Criadores', 'Negócios', 'Desenvolvedores', 'Design', 'Marketing'],
-      index: true
+      index: true,
+      default: null
     }
   },
   {

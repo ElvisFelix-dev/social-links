@@ -1,4 +1,4 @@
-import sendEmail from './sendEmail.js'
+import brevo from './brevoClient.js'
 
 export const sendNewFollowerEmail = async ({
   toEmail,
@@ -9,96 +9,51 @@ export const sendNewFollowerEmail = async ({
 }) => {
   const profileUrl = `${process.env.FRONTEND_URL}/${followerUsername}`
 
-  const message = `
-    <div style="
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #f4f4f5;
-      padding: 40px 20px;
-    ">
-      <div style="
-        max-width: 600px;
-        margin: 0 auto;
-        background-color: #ffffff;
-        border-radius: 8px;
-        padding: 32px;
-        color: #18181b;
-      ">
+  await brevo.sendTransacEmail({
+    sender: {
+      name: 'LinksAll',
+      email: 'sociallinkofi@gmail.com'
+    },
+    to: [{ email: toEmail, name: toName }],
+    subject: '🎉 Você tem um novo seguidor no LinksAll',
+    htmlContent: `
+      <div style="font-family: Arial; padding: 24px;">
         <h2>Olá, ${toName} 👋</h2>
 
-        <p>
-          Você ganhou um novo seguidor no <strong>LinksAll</strong>!
-        </p>
+        <p>Você ganhou um novo seguidor no <strong>LinksAll</strong> 🎉</p>
 
-        <div style="
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin: 24px 0;
-        ">
+        <div style="display:flex; align-items:center; gap:12px; margin:16px 0;">
           <img
-            src="${followerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(followerName)}`}"
-            alt="${followerName}"
-            width="64"
-            height="64"
-            style="
-              border-radius: 50%;
-              object-fit: cover;
-            "
+            src="${followerAvatar || `https://ui-avatars.com/api/?name=${followerName}`}"
+            width="56"
+            height="56"
+            style="border-radius:50%;"
           />
-
           <div>
-            <p style="margin: 0; font-weight: bold;">
-              ${followerName}
-            </p>
-            <p style="margin: 4px 0; color: #52525b;">
-              @${followerUsername}
-            </p>
+            <strong>${followerName}</strong><br/>
+            <span>@${followerUsername}</span>
           </div>
         </div>
 
-        <div style="margin: 32px 0; text-align: center;">
-          <a
-            href="${profileUrl}"
-            style="
-              display: inline-block;
-              padding: 12px 24px;
-              background-color: #22c55e;
-              color: #ffffff;
-              text-decoration: none;
-              border-radius: 6px;
-              font-weight: bold;
-            "
-          >
-            Ver perfil
-          </a>
-        </div>
+        <a
+          href="${profileUrl}"
+          style="
+            display: inline-block;
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: #22c55e;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+          "
+        >
+          Ver perfil
+        </a>
 
-        <p style="font-size: 14px; color: #52525b;">
-          Continue compartilhando seu perfil para conquistar ainda mais seguidores 🚀
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
-
-        <p style="font-size: 14px; color: #71717a;">
-          Atenciosamente,<br />
-          <strong>Equipe LinksAll</strong>
+        <p style="margin-top: 24px; font-size: 12px; color: #666;">
+          © ${new Date().getFullYear()} LinksAll
         </p>
       </div>
-
-      <p style="
-        text-align: center;
-        font-size: 12px;
-        color: #a1a1aa;
-        margin-top: 20px;
-      ">
-        © ${new Date().getFullYear()} LinksAll. Todos os direitos reservados.
-      </p>
-    </div>
-  `
-
-  await sendEmail({
-    email: toEmail,
-    subject: '🎉 Você tem um novo seguidor no LinksAll',
-    message
+    `
   })
 }

@@ -696,13 +696,19 @@ export const getSuggestionsByCategory = async (req, res) => {
 export const getUsersByCategory = async (req, res) => {
   try {
     const { category } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
 
+    const total = await User.countDocuments({ category });
+    const totalPages = Math.ceil(total / limit);
     const users = await User.find({ category })
-      .select('name username avatar category');
+      .select('name username avatar category')
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    res.json(users);
+    res.json({ users, totalPages });
   } catch (err) {
     console.error('Erro ao buscar usuários por categoria:', err);
     res.status(500).json({ error: 'Erro ao buscar usuários por categoria' });
   }
-}
+};

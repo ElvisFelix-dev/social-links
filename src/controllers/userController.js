@@ -100,98 +100,64 @@ export const getCurrentUser = async (req, res) => {
 /* ================= UPDATE PROFILE ================= */
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user?._id
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' })
-    }
+    const userId = req.user._id;
+    const { username, bio, category } = req.body;
 
-    const { username, bio, categories } = req.body
+    const updateData = {};
 
-    /* ================= VALIDAR USERNAME ================= */
+    /* ================= USERNAME ================= */
+    if (username) updateData.username = username.trim();
+    if (bio !== undefined) updateData.bio = bio;
 
-    if (!username || !username.trim()) {
-      return res.status(400).json({ error: 'Username é obrigatório' })
-    }
+    /* ================= CATEGORY ================= */
+    if (category !== undefined) {
+      let parsedCategory;
 
-    const normalizedUsername = username.trim().toLowerCase()
-
-    const existingUser = await User.findOne({
-      username: normalizedUsername,
-      _id: { $ne: userId }
-    })
-
-    if (existingUser) {
-      return res.status(409).json({ error: 'Username já está em uso' })
-    }
-
-    /* ================= MONTAR UPDATE ================= */
-
-    const updateData = {
-      username: normalizedUsername,
-      bio: bio?.substring(0, 160) || ''
-    }
-
-    /* ================= CATEGORIES ================= */
-
-    if (categories !== undefined) {
-      let parsedCategory
-
-      try {
-        // multipart pode vir como string JSON ou string simples
-        if (Array.isArray(categories)) {
-          parsedCategory = categories[0] // garante só 1
-        } else if (typeof categories === 'string') {
-          const parsed = JSON.parse(categories)
-          parsedCategory = Array.isArray(parsed) ? parsed[0] : parsed
+      if (typeof category === 'string') {
+        try {
+          const parsed = JSON.parse(category);
+          parsedCategory = Array.isArray(parsed) ? parsed[0] : parsed;
+        } catch {
+          parsedCategory = category; // se não for JSON, usa direto
         }
-      } catch (err) {
-        return res.status(400).json({
-          error: 'Formato inválido de categoria'
-        })
       }
 
       if (!parsedCategory) {
-        return res.status(400).json({
-          error: 'Categoria é obrigatória'
-        })
+        return res.status(400).json({ error: 'Categoria é obrigatória' });
       }
 
       if (!ALLOWED_CATEGORIES.includes(parsedCategory)) {
         return res.status(400).json({
           error: 'Categoria inválida',
           allowedCategories: ALLOWED_CATEGORIES
-        })
+        });
       }
 
-      // salva como string (1 categoria por user)
-      updateData.category = parsedCategory
+      updateData.category = parsedCategory;
     }
 
     /* ================= BACKGROUND ================= */
-
     if (req.file?.path) {
-      updateData.profileBackground = req.file.path
+      updateData.profileBackground = req.file.path;
     }
 
     /* ================= UPDATE ================= */
-
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       updateData,
       {
         new: true,
         runValidators: true,
-        select:
-          'name avatar username email bio profileBackground categories'
+        select: 'name avatar username email bio profileBackground category'
       }
-    )
+    );
 
-    return res.json(updatedUser)
+    return res.json(updatedUser);
   } catch (err) {
-    console.error('Erro ao atualizar perfil:', err)
-    return res.status(500).json({ error: 'Erro ao atualizar perfil' })
+    console.error('Erro ao atualizar perfil:', err);
+    return res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
-}
+};
 
 /* ================= FOLLOW USER ================= */
 
@@ -727,5 +693,16 @@ export const getSuggestionsByCategory = async (req, res) => {
   }
 }
 
+export const getUsersByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
 
+    const users = await User.find({ category })
+      .select('name username avatar category');
 
+    res.json(users);
+  } catch (err) {
+    console.error('Erro ao buscar usuários por categoria:', err);
+    res.status(500).json({ error: 'Erro ao buscar usuários por categoria' });
+  }
+}

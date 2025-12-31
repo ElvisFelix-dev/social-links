@@ -4,17 +4,19 @@ import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
+// 🔔 Buscar notificações não lidas
 router.get('/unread', authMiddleware, async (req, res) => {
   const notifications = await Notification.find({
-    user: req.user._id, // 👈 atenção aqui
+    user: req.user._id,
     read: false
   })
-    .populate('fromUser', 'username avatar')
+    .populate('fromUser', 'name username avatar') // ✅ AQUI
     .sort({ createdAt: -1 })
 
   res.json(notifications)
 })
 
+// ✅ Marcar todas como lidas
 router.patch('/read', authMiddleware, async (req, res) => {
   await Notification.updateMany(
     { user: req.user._id, read: false },

@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
     notificationSettings: {
       welcomeEmail: {
         type: Boolean,
-        default: true
+        default: false,
       },
       newFollowerEmail: {
         type: Boolean,

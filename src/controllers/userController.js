@@ -24,23 +24,38 @@ export const googleLogin = async (req, res) => {
       { expiresIn: '1d' }
     )
 
-    // ✉️ Email de boas-vindas (somente 1x)
-    if (user.welcomeEmailSent !== true && user.email) {
+    /**
+     * ✉️ Email de boas-vindas (SOMENTE 1 VEZ)
+     * - Protegido contra múltiplos logins
+     * - Seguro contra race condition
+     */
+    if (user.email) {
       try {
-        // marca antes para evitar envio duplicado
-        user.welcomeEmailSent = true
-        await user.save()
+        const updatedUser = await User.findOneAndUpdate(
+          {
+            _id: user._id,
+            welcomeEmailSent: false
+          },
+          {
+            $set: { welcomeEmailSent: true }
+          },
+          { new: true }
+        )
 
-        await sendWelcomeEmail({
-          name: user.name,
-          email: user.email
-        })
+        // Só envia se foi realmente a primeira vez
+        if (updatedUser) {
+          await sendWelcomeEmail({
+            name: user.name,
+            email: user.email
+          })
+        }
       } catch (err) {
+        // ❌ Falha no email NÃO quebra o login
         console.error('❌ Erro ao enviar email de boas-vindas:', err)
-        // login NÃO falha por causa do email
       }
     }
 
+    // 🔁 Redireciona para o frontend com token
     return res.redirect(
       `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
     )

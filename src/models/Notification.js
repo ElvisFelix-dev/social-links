@@ -9,7 +9,8 @@ const notificationSchema = new mongoose.Schema(
     },
     fromUser: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: true
     },
     type: {
       type: String,
@@ -22,6 +23,12 @@ const notificationSchema = new mongoose.Schema(
     }
   },
   { timestamps: true }
+)
+
+// 🔒 impede notificações duplicadas do mesmo tipo
+notificationSchema.index(
+  { user: 1, fromUser: 1, type: 1 },
+  { unique: true }
 )
 
 export default mongoose.model('Notification', notificationSchema)

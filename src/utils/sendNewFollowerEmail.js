@@ -138,3 +138,44 @@ export const sendNewFollowerEmail = async ({
           </div>
 
           <!-- CTA -->
+          <div style="text-align: center;">
+            <a
+              href="${process.env.FRONTEND_URL}/${followerUsername}"
+              style="
+                display: inline-block;
+                padding: 14px 28px;
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 999px;
+                font-size: 15px;
+                font-weight: 600;
+                box-shadow: 0 6px 20px rgba(34,197,94,0.35);
+              "
+            >
+              Ver perfil
+            </a>
+          </div>
+
+          <!-- FOOTER -->
+          <hr style="
+            border: none;
+            border-top: 1px solid #1f2937;
+            margin: 32px 0 20px;
+          " />
+
+          <p style="
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.5;
+          ">
+            © ${new Date().getFullYear()} LinksAll<br />
+            Você está recebendo este e-mail porque possui uma conta ativa.
+          </p>
+
+        </div>
+      </div>
+    `
+  })
+}

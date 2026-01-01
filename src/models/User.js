@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
     notificationSettings: {
       welcomeEmail: {
         type: Boolean,
-        default: false,
+        default: true
       },
       newFollowerEmail: {
         type: Boolean,
@@ -81,11 +81,10 @@ const userSchema = new mongoose.Schema(
 
     /* ================= EXPLORE ================= */
 
-    category: { // <--- ALTERAÇÃO: string única
-      type: String,
+    categories: {
+      type: [String],
       enum: ['Criadores', 'Negócios', 'Desenvolvedores', 'Design', 'Marketing'],
-      index: true,
-      default: null
+      index: true
     }
   },
   {

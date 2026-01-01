@@ -26,14 +26,4 @@ router.patch('/read', authMiddleware, async (req, res) => {
   res.sendStatus(204)
 })
 
-router.get('/unread-count', authMiddleware, async (req, res) => {
-  const count = await Notification.countDocuments({
-    user: req.user._id,
-    read: false
-  })
-
-  res.json({ count })
-})
-
-
 export default router

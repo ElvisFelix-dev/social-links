@@ -24,38 +24,23 @@ export const googleLogin = async (req, res) => {
       { expiresIn: '1d' }
     )
 
-    /**
-     * ✉️ Email de boas-vindas (SOMENTE 1 VEZ)
-     * - Protegido contra múltiplos logins
-     * - Seguro contra race condition
-     */
-    if (user.email) {
+    // ✉️ Email de boas-vindas (somente 1x)
+    if (user.welcomeEmailSent !== true && user.email) {
       try {
-        const updatedUser = await User.findOneAndUpdate(
-          {
-            _id: user._id,
-            welcomeEmailSent: false
-          },
-          {
-            $set: { welcomeEmailSent: true }
-          },
-          { new: true }
-        )
+        // marca antes para evitar envio duplicado
+        user.welcomeEmailSent = true
+        await user.save()
 
-        // Só envia se foi realmente a primeira vez
-        if (updatedUser) {
-          await sendWelcomeEmail({
-            name: user.name,
-            email: user.email
-          })
-        }
+        await sendWelcomeEmail({
+          name: user.name,
+          email: user.email
+        })
       } catch (err) {
-        // ❌ Falha no email NÃO quebra o login
         console.error('❌ Erro ao enviar email de boas-vindas:', err)
+        // login NÃO falha por causa do email
       }
     }
 
-    // 🔁 Redireciona para o frontend com token
     return res.redirect(
       `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
     )
@@ -100,62 +85,84 @@ export const getCurrentUser = async (req, res) => {
 /* ================= UPDATE PROFILE ================= */
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { username, bio, category } = req.body;
-
-    const updateData = {};
-
-    /* ================= USERNAME ================= */
-    if (username) updateData.username = username.trim();
-
-    /* ================= BIO ================= */
-    if (bio !== undefined) updateData.bio = bio;
-
-    /* ================= CATEGORY ================= */
-    // No seu controller updateProfile
-
-/* ================= CATEGORY ================= */
-    if (!category) {
-      return res.status(400).json({ error: 'Categoria é obrigatória' });
+    const userId = req.user?._id
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' })
     }
 
-    // Verifica se a categoria enviada está na lista permitida
-    if (!ALLOWED_CATEGORIES.includes(category)) {
-      return res.status(400).json({
-        error: 'Categoria inválida',
-        allowedCategories: ALLOWED_CATEGORIES
-      });
+    const { username, bio, categories } = req.body
+
+    /* ================= VALIDAR USERNAME ================= */
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: 'Username é obrigatório' })
     }
 
-    // AQUI ESTÁ O PULO DO GATO:
-    // Em vez de: updateData.category = category;
-    // Faça isso (se seu schema for um array):
-    updateData.categories = [category];
+    const normalizedUsername = username.trim().toLowerCase()
+
+    const existingUser = await User.findOne({
+      username: normalizedUsername,
+      _id: { $ne: userId }
+    })
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username já está em uso' })
+    }
+
+    /* ================= MONTAR UPDATE ================= */
+
+    const updateData = {
+      username: normalizedUsername,
+      bio: bio?.substring(0, 160) || ''
+    }
+
+    /* ================= CATEGORIES ================= */
+
+    if (categories) {
+      // multipart pode vir como string
+      const parsedCategories = Array.isArray(categories)
+        ? categories
+        : JSON.parse(categories)
+
+      const invalidCategories = parsedCategories.filter(
+        c => !ALLOWED_CATEGORIES.includes(c)
+      )
+
+      if (invalidCategories.length > 0) {
+        return res.status(400).json({
+          error: 'Categorias inválidas',
+          invalidCategories
+        })
+      }
+
+      updateData.categories = parsedCategories
+    }
+
+    /* ================= BACKGROUND ================= */
+
+    if (req.file?.path) {
+      updateData.profileBackground = req.file.path
+    }
 
     /* ================= UPDATE ================= */
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       updateData,
       {
         new: true,
         runValidators: true,
-        // Garanta que está retornando 'categories' e não 'category'
-        select: 'name avatar username email bio profileBackground categories'
+        select:
+          'name avatar username email bio profileBackground categories'
       }
-    );
+    )
 
-    return res.json(updatedUser);
-
+    return res.json(updatedUser)
   } catch (err) {
-    console.error('Erro ao atualizar perfil:', err);
-
-    if (err.code === 11000 && err.keyValue?.username) {
-      return res.status(409).json({ error: 'Username já está em uso' });
-    }
-
-    return res.status(500).json({ error: 'Erro ao atualizar perfil' });
+    console.error('Erro ao atualizar perfil:', err)
+    return res.status(500).json({ error: 'Erro ao atualizar perfil' })
   }
-};
+}
 
 /* ================= FOLLOW USER ================= */
 
@@ -657,52 +664,3 @@ export const getUserSuggestions = async (req, res) => {
   }
 }
 
-export const getSuggestionsByCategory = async (req, res) => {
-  try {
-    const loggedUserId = req.user?._id // 👈 seguro
-
-    const match = loggedUserId
-      ? { _id: { $ne: loggedUserId } }
-      : {}
-
-    const users = await User.aggregate([
-      { $match: match },
-      {
-        $match: {
-          categories: { $exists: true, $ne: [] }
-        }
-      },
-      {
-        $project: {
-          name: 1,
-          username: 1,
-          avatar: 1,
-          categories: 1,
-          isVerified: 1
-        }
-      },
-      { $sample: { size: 15 } }
-    ])
-
-    res.json(users)
-  } catch (err) {
-    console.error('Erro em getSuggestionsByCategory:', err)
-    res.status(500).json({ error: 'Erro ao buscar sugestões' })
-  }
-}
-
-export const getUsersByCategory = async (req, res) => {
-  try {
-    const { category } = req.params;
-
-    // Busca case-insensitive em arrays
-    const users = await User.find({
-      categories: { $regex: new RegExp(`^${category}$`, 'i') }
-    }).select('name username avatar categories');
-
-    res.json(users);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar usuários por categoria' });
-  }
-};

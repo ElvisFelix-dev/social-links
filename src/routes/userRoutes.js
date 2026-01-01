@@ -14,9 +14,7 @@ import {
   getSuggestedUsers,
   exploreUsers,
   searchUsers,
-  getUserSuggestions,
-  getSuggestionsByCategory,
-  getUsersByCategory
+  getUserSuggestions
 } from '../controllers/userController.js'
 
 import uploadBackground from '../middleware/uploadBackground.js'
@@ -66,10 +64,6 @@ router.get(
 
 router.get('/suggestions', getSuggestedUsers)
 router.get('/suggestions-users', getUserSuggestions)
-router.get('/suggestions-by-category', getSuggestionsByCategory)
-// Lista usuários por categoria
-router.get('/:category', getUsersByCategory);
-router.get('/search', searchUsers)
 
 // 📌 LISTAS (SEM AUTH)
 router.get('/profile/:username/followers', getFollowers)

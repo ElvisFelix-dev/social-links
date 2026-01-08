@@ -1,9 +1,11 @@
+// routes/analyticsRoutes.js
 import { Router } from 'express'
-import { getClicksByDay } from '../controllers/analyticsController.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
+import authMiddleware from '../middleware/authMiddleware.js'
+import { getClicksByDay, getDevicesStats } from '../controllers/analyticsController.js'
 
 const router = Router()
 
-router.get('/clicks/day', authMiddleware, getClicksByDay)
+router.get('/clicks/daily', authMiddleware, getClicksByDay)
+router.get('/devices', authMiddleware, getDevicesStats)
 
 export default router

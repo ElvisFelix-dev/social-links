@@ -20,6 +20,7 @@ import likeRoutes from './routes/likeRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import analyticsDashboardRoutes from './routes/analyticsDashboardRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
+import publicLinksRoutes from './routes/publicLinksRoutes.js'
 
 const app = express()
 
@@ -138,6 +139,7 @@ app.use('/api/likes', likeRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/analytics', analyticsDashboardRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api', publicLinksRoutes)
 
 app.use('/api/test', testRoutes)
 

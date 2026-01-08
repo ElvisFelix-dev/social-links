@@ -3,6 +3,8 @@ import { parseAnalytics } from '../utils/analytics.js'
 
 export const registerProfileVisit = async (req, user) => {
   try {
+    if (!user?._id) return
+
     const analytics = parseAnalytics(req)
 
     await ProfileVisit.create({

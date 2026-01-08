@@ -1,6 +1,7 @@
 // controllers/publicProfileController.js
 import User from '../models/User.js'
 import Link from '../models/Link.js'
+import { registerProfileVisit } from './profileAnalyticsController.js'
 
 export const getPublicProfile = async (req, res) => {
   try {
@@ -26,6 +27,17 @@ export const getPublicProfile = async (req, res) => {
       return res.status(404).json({ error: 'Perfil não encontrado' })
     }
 
+    /* ==================================================
+       📊 REGISTRAR VISITA AO PERFIL
+       - não bloqueia a resposta
+       - evita contar visita do próprio usuário
+    ================================================== */
+    const loggedUserId = req.user?._id
+
+    if (!loggedUserId || loggedUserId.toString() !== user._id.toString()) {
+      registerProfileVisit(req, user)
+    }
+
     // 🔗 Buscar links ativos do usuário
     const links = await Link.find({
       user: user._id,
@@ -42,7 +54,7 @@ export const getPublicProfile = async (req, res) => {
         bio: user.bio,
         email: user.email,
         profileBackground: user.profileBackground,
-        isVerified: user.isVerified, // ✅ selo
+        isVerified: user.isVerified, // ✅ selo verificado
         followersCount: user.followers.length,
         followingCount: user.following.length
       },

@@ -15,7 +15,12 @@ router.get('/', authMiddleware, async (req, res) => {
       .populate('fromUser', 'name username avatar')
       .sort({ createdAt: -1 })
 
-    res.json(notifications)
+    // 🧹 Remove notificações órfãs (fromUser deletado)
+    const validNotifications = notifications.filter(
+      n => n.fromUser
+    )
+
+    res.json(validNotifications)
   } catch (err) {
     console.error('Erro ao buscar notificações:', err)
     res.status(500).json({ message: 'Erro ao buscar notificações' })
@@ -34,7 +39,11 @@ router.get('/unread', authMiddleware, async (req, res) => {
       .populate('fromUser', 'name username avatar')
       .sort({ createdAt: -1 })
 
-    res.json(notifications)
+    const validNotifications = notifications.filter(
+      n => n.fromUser
+    )
+
+    res.json(validNotifications)
   } catch (err) {
     console.error('Erro ao buscar notificações não lidas:', err)
     res.status(500).json({ message: 'Erro ao buscar notificações' })
@@ -47,8 +56,13 @@ router.get('/unread', authMiddleware, async (req, res) => {
 router.patch('/read', authMiddleware, async (req, res) => {
   try {
     await Notification.updateMany(
-      { user: req.user._id, read: false },
-      { $set: { read: true } }
+      {
+        user: req.user._id,
+        read: false
+      },
+      {
+        $set: { read: true }
+      }
     )
 
     res.sendStatus(204)

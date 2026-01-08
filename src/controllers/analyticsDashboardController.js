@@ -25,7 +25,30 @@ export const getTopLinks = async (req, res) => {
       }
     },
     { $sort: { clicks: -1 } },
-    { $limit: 5 }
+    { $limit: 5 },
+
+    // 🔗 JOIN com links
+    {
+      $lookup: {
+        from: 'links',          // nome da collection
+        localField: '_id',      // linkId
+        foreignField: '_id',
+        as: 'link'
+      }
+    },
+
+    { $unwind: '$link' },
+
+    // 🎯 dados finais
+    {
+      $project: {
+        _id: 0,
+        linkId: '$link._id',
+        title: '$link.title',   // ou name
+        url: '$link.url',
+        clicks: 1
+      }
+    }
   ])
 
   res.json(data)

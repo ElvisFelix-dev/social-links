@@ -1,33 +1,37 @@
-import Click from '../models/Click.js'
+// controllers/analyticsController.js
+import LinkClick from '../models/LinkClick.js'
 import mongoose from 'mongoose'
 
+/* ==================================================
+ 📊 CLIQUES POR DIA (últimos 30 dias)
+================================================== */
 export const getClicksByDay = async (req, res) => {
   try {
-    const userId = req.user.id
+    const userId = new mongoose.Types.ObjectId(req.user.id)
 
-    const stats = await Click.aggregate([
+    const data = await LinkClick.aggregate([
       {
-        $match: {
-          user: new mongoose.Types.ObjectId(userId)
-        }
+        $match: { userId }
       },
       {
         $group: {
           _id: {
-            day: { $dayOfMonth: '$createdAt' },
-            month: { $month: '$createdAt' },
-            year: { $year: '$createdAt' }
+            day: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$createdAt'
+              }
+            }
           },
-          total: { $sum: 1 }
+          clicks: { $sum: 1 }
         }
       },
-      {
-        $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 }
-      }
+      { $sort: { '_id.day': 1 } }
     ])
 
-    return res.json(stats)
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao gerar analytics' })
+    res.json(data)
+  } catch (err) {
+    console.error('getClicksByDay error:', err)
+    res.status(500).json({ error: 'Erro ao gerar analytics de cliques' })
   }
 }

@@ -70,3 +70,45 @@ export const getDevicesStats = async (req, res) => {
     res.status(500).json({ error: 'Erro ao gerar analytics de dispositivos' })
   }
 }
+
+export const getTopLinks = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user._id)
+
+    const topLinks = await LinkClick.aggregate([
+      {
+        $match: { userId }
+      },
+      {
+        $group: {
+          _id: '$linkId',
+          clicks: { $sum: 1 }
+        }
+      },
+      { $sort: { clicks: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'links',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'link'
+        }
+      },
+      { $unwind: '$link' },
+      {
+        $project: {
+          linkId: '$_id',
+          clicks: 1,
+          title: '$link.title',
+          url: '$link.url'
+        }
+      }
+    ])
+
+    res.json(topLinks)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erro ao buscar top links' })
+  }
+}

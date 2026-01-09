@@ -137,9 +137,8 @@ app.use('/api/links', linkRoutes)
 app.use('/api', publicRoutes)
 app.use('/api/likes', likeRoutes)
 app.use('/api/notifications', notificationRoutes)
-app.use('/api/analytics', analyticsDashboardRoutes)
-app.use('/api/analytics', analyticsRoutes)
-app.use('/api', analyticsLinksRoutes)
+app.use('/api/analytics', analyticsLinksRoutes)
+app.use('/api/analytic', analyticsDashboardRoutes)
 
 app.use('/api/test', testRoutes)
 

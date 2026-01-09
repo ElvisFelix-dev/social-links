@@ -56,12 +56,57 @@ export const getDailyStats = async (req, res) => {
     {
       $group: {
         _id: {
-          day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+          day: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          }
         },
         visits: { $sum: 1 }
       }
     },
     { $sort: { '_id.day': 1 } }
+  ])
+
+  res.json(data)
+}
+
+export async function getVisitsByCountry(req, res) {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+
+  const data = await ProfileVisit.aggregate([
+    { $match: { userId, country: { $ne: null } } },
+    {
+      $group: {
+        _id: '$country',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } }
+  ])
+
+  res.json(data)
+}
+
+export async function getVisitsByRegion(req, res) {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+
+  const data = await ProfileVisit.aggregate([
+    {
+      $match: {
+        userId,
+        country: 'BR',
+        region: { $ne: null }
+      }
+    },
+    {
+      $group: {
+        _id: '$region',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } }
   ])
 
   res.json(data)

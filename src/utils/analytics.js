@@ -1,5 +1,6 @@
 // utils/analytics.js
 import { UAParser } from 'ua-parser-js'
+import geoip from 'geoip-lite'
 
 export function parseAnalytics(req) {
   try {
@@ -7,27 +8,24 @@ export function parseAnalytics(req) {
     const parser = new UAParser(ua)
     const result = parser.getResult()
 
-    return {
-      ip:
-        req.headers['x-forwarded-for']?.split(',')[0] ||
-        req.socket?.remoteAddress ||
-        null,
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0] ||
+      req.socket?.remoteAddress ||
+      null
 
+    const geo = ip ? geoip.lookup(ip) : null
+
+    return {
+      ip,
       userAgent: ua,
 
       device: result.device.type || 'desktop',
       browser: result.browser.name || 'Unknown',
       os: result.os.name || 'Unknown',
 
-      country:
-        req.headers['x-vercel-ip-country'] ||
-        req.headers['cf-ipcountry'] ||
-        null,
-
-      city:
-        req.headers['x-vercel-ip-city'] ||
-        req.headers['cf-ipcity'] ||
-        null,
+      country: geo?.country || null,
+      region: geo?.region || null, // ← ESTADO
+      city: geo?.city || null,
 
       referrer: req.headers.referer || null
     }

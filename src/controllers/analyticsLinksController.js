@@ -1,3 +1,5 @@
+import mongoose from 'mongoose'
+import ProfileVisit from '../models/ProfileVisit.js'
 import Link from '../models/Link.js'
 
 export const getTopClickedLinks = async (req, res) => {
@@ -44,4 +46,23 @@ export const getClicksOverview = async (req, res) => {
     console.error('Erro ao buscar total de cliques:', error)
     res.status(500).json({ error: 'Erro ao buscar total de cliques' })
   }
+}
+
+export const getDailyStats = async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+
+  const data = await ProfileVisit.aggregate([
+    { $match: { userId } },
+    {
+      $group: {
+        _id: {
+          day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.day': 1 } }
+  ])
+
+  res.json(data)
 }

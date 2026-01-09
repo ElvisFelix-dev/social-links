@@ -1,22 +1,12 @@
 import express from 'express'
-import {
-  getOverview,
-  getTopClickedLinks
-} from '../controllers/analyticsLinksController.js'
+import { getTopClickedLinks, getClicksOverview } from '../controllers/analyticsLinksController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 router.use(authMiddleware)
 
-/**
- * Overview geral
- */
-router.get('/overview', getOverview)
-
-/**
- * Top links
- */
-router.get('/top-links', getTopClickedLinks)
+router.get('/analytics-links', getTopClickedLinks)
+router.get('/clicks-overview', getClicksOverview)
 
 export default router

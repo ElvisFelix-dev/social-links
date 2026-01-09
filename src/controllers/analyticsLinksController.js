@@ -111,3 +111,27 @@ export async function getVisitsByRegion(req, res) {
 
   res.json(data)
 }
+
+export async function getVisitsByCity(req, res) {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+
+  const data = await ProfileVisit.aggregate([
+    {
+      $match: {
+        userId,
+        city: { $ne: null }
+      }
+    },
+    {
+      $group: {
+        _id: '$city',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } },
+    { $limit: 10 } // 🔥 essencial para gráficos
+  ])
+
+  res.json(data)
+}
+

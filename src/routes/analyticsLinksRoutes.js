@@ -4,7 +4,8 @@ import {
   getClicksOverview,
   getDailyStats,
   getVisitsByCountry,
-  getVisitsByRegion
+  getVisitsByRegion,
+  getVisitsByCity
 } from '../controllers/analyticsLinksController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 
@@ -17,5 +18,6 @@ router.get('/clicks-overview', getClicksOverview)
 router.get('/daily', getDailyStats)
 router.get('/by-country',getVisitsByCountry )
 router.get('/by-region',getVisitsByRegion )
+router.get('/by-city',getVisitsByCity )
 
 export default router

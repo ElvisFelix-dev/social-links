@@ -10,6 +10,7 @@ import './config/passport.js'
 import User from './models/User.js'
 import { isBot } from './utils/isBot.js'
 import { testCloudinaryConnection } from './config/cloudinary.js'
+import { startWeeklyInsightsJob } from './jobs/weeklyInsights.job.js'
 
 import testRoutes from './routes/test.routes.js'
 
@@ -149,6 +150,7 @@ app.use('/api/test', testRoutes)
    CLOUDINARY
 ====================== */
 testCloudinaryConnection()
+startWeeklyInsightsJob()
 
 /* ======================
    START SERVER

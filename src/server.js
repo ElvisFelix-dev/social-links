@@ -23,6 +23,7 @@ import analyticsDashboardRoutes from './routes/analyticsDashboardRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 import analyticsLinksRoutes from './routes/analyticsLinksRoutes.js'
 import analyticsInsightsRoutes from './routes/analyticsInsightsRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 
 const app = express()
 
@@ -143,6 +144,7 @@ app.use('/api/analytics', analyticsDashboardRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/metric', analyticsLinksRoutes)
 app.use('/api/db', analyticsInsightsRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use('/api/test', testRoutes)
 

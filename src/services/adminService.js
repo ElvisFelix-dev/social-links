@@ -74,7 +74,7 @@ export async function getUsersPaginated({ page, limit, search }) {
 export async function getUserDetails(userId) {
   const user = await User.findById(userId)
     .select(
-      'name email username role blocked createdAt lastLogin isVerified'
+      ' avatar name email username role blocked createdAt lastLogin isVerified'
     )
     .lean()
 

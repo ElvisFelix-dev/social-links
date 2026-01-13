@@ -49,7 +49,7 @@ export async function getUsersPaginated({ page, limit, search }) {
   const [users, total] = await Promise.all([
     User.find(query)
       .select(
-        'name email username role blocked createdAt lastLogin'
+        'avatar name email username role blocked createdAt lastLogin isVerified'
       )
       .sort({ createdAt: -1 })
       .skip(skip)

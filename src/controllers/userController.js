@@ -60,7 +60,7 @@ export const getCurrentUser = async (req, res) => {
     }
 
     const user = await User.findById(userId)
-      .select('name avatar username email bio profileBackground followers following role')
+      .select('name isVerified avatar username email bio profileBackground followers following role')
 
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
@@ -73,6 +73,7 @@ export const getCurrentUser = async (req, res) => {
       username: user.username,
       email: user.email,
       bio: user.bio,
+      isVerified: user.isVerified,
 
       profileBackground: user.profileBackground,
       followersCount: user.followers.length,

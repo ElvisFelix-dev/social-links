@@ -144,7 +144,7 @@ app.use('/api/analytics', analyticsDashboardRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/metric', analyticsLinksRoutes)
 app.use('/api/db', analyticsInsightsRoutes)
-app.use('/api/admin', adminRoutes)
+app.use('/api/public/admin', adminRoutes)
 
 app.use('/api/test', testRoutes)
 

@@ -1,35 +1,150 @@
-// services/adminService.js
+import { Types } from 'mongoose'
 import User from '../models/User.js'
 import ProfileVisit from '../models/ProfileVisit.js'
 import Link from '../models/Link.js'
 
-/* 📊 OVERVIEW DO ADMIN (DADOS GLOBAIS DO SISTEMA) */
 export async function getAdminOverview() {
   const [
     totalUsers,
     activeUsers,
     totalVisits,
-    clicksAgg
+    clicksAgg,
+
+    countries,
+    states,
+    cities,
+    devices,
+    os,
+    browsers
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ blocked: false }),
     ProfileVisit.countDocuments(),
+
     Link.aggregate([
-      {
-        $group: {
-          _id: null,
-          clicks: { $sum: '$clicks' }
-        }
-      }
-    ])
+      { $group: { _id: null, clicks: { $sum: '$clicks' } } }
+    ]),
+
+    aggregateVisits('country'),
+    aggregateVisits('state'),
+    aggregateVisits('city'),
+    aggregateVisits('device'),
+    aggregateVisits('os'),
+    aggregateVisits('browser')
   ])
 
   return {
     users: totalUsers,
     activeUsers,
     visits: totalVisits,
-    clicks: clicksAgg[0]?.clicks || 0
+    clicks: clicksAgg[0]?.clicks || 0,
+
+    analytics: {
+      countries,
+      states,
+      cities,
+      devices,
+      os,
+      browsers
+    }
   }
+}
+
+export async function getUserAnalytics(userId) {
+  const objectId = new Types.ObjectId(userId)
+
+  const [
+    visitsByDay,
+    countries,
+    states,
+    cities,
+    devices,
+    os,
+    browsers
+  ] = await Promise.all([
+    ProfileVisit.aggregate([
+      { $match: { userId: objectId } },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+
+    aggregateUserVisits(userId, 'country'),
+    aggregateUserVisits(userId, 'state'),
+    aggregateUserVisits(userId, 'city'),
+    aggregateUserVisits(userId, 'device'),
+    aggregateUserVisits(userId, 'os'),
+    aggregateUserVisits(userId, 'browser')
+  ])
+
+  return {
+    visitsByDay,
+    locations: {
+      countries,
+      states,
+      cities
+    },
+    devices,
+    os,
+    browsers
+  }
+}
+
+async function aggregateUserVisits(userId, field) {
+  return ProfileVisit.aggregate([
+    {
+      $match: {
+        userId: new Types.ObjectId(userId),
+        [field]: { $ne: null }
+      }
+    },
+    {
+      $group: {
+        _id: `$${field}`,
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { count: -1 } },
+    { $limit: 10 },
+    {
+      $project: {
+        _id: 0,
+        label: '$_id',
+        count: 1
+      }
+    }
+  ])
+}
+
+/* ♻️ Helper reutilizável */
+async function aggregateVisits(field) {
+  return ProfileVisit.aggregate([
+    { $match: { [field]: { $ne: null } } },
+    {
+      $group: {
+        _id: `$${field}`,
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { count: -1 } },
+    { $limit: 10 },
+    {
+      $project: {
+        _id: 0,
+        label: '$_id',
+        count: 1
+      }
+    }
+  ])
 }
 
 /* 📋 LISTAGEM DE USUÁRIOS (PAGINADA + BUSCA) */

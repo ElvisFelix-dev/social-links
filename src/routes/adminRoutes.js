@@ -5,7 +5,8 @@ import {
   listUsers,
   getUserDetailsController,
   updateRole,
-  toggleBlockUser
+  toggleBlockUser,
+  getUserAnalyticsController
 } from '../controllers/adminController.js'
 
 const router = Router()
@@ -18,6 +19,8 @@ router.get('/overview', getOverview)
 /* 👥 Usuários */
 router.get('/users', listUsers)
 router.get('/users/:userId', getUserDetailsController)
+// routes/adminRoutes.js
+router.get('/users/:userId/analytics', getUserAnalyticsController)
 router.patch('/users/:userId/role', updateRole)
 router.patch('/users/:userId/block', toggleBlockUser)
 

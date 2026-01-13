@@ -1,11 +1,25 @@
-// controllers/adminController.js
 import {
   getAdminOverview,
   getUsersPaginated,
   getUserDetails as getUserDetailsService,
+  getUserAnalytics,
   updateUserRole,
   blockUser
 } from '../services/adminService.js'
+
+/* 📊 ANALYTICS DE UM USUÁRIO */
+export async function getUserAnalyticsController(req, res) {
+  try {
+    const { userId } = req.params
+
+    const analytics = await getUserAnalytics(userId)
+
+    return res.json(analytics)
+  } catch (err) {
+    console.error('ADMIN getUserAnalytics error', err)
+    return res.status(500).json({ message: 'Erro interno' })
+  }
+}
 
 /* 📊 OVERVIEW DO SISTEMA (ADMIN) */
 export async function getOverview(req, res) {

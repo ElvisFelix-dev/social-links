@@ -189,7 +189,7 @@ export async function getUsersPaginated({ page, limit, search }) {
 export async function getUserDetails(userId) {
   const user = await User.findById(userId)
     .select(
-      ' avatar name email username role blocked createdAt lastLogin isVerified'
+      'avatar name email username role blocked createdAt lastLogin isVerified followers'
     )
     .lean()
 
@@ -211,6 +211,7 @@ export async function getUserDetails(userId) {
 
   return {
     ...user,
+    followersCount: user.followers?.length || 0,
     stats: {
       visits,
       links,

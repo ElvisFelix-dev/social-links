@@ -26,7 +26,7 @@ export async function getAdminOverview() {
     ]),
 
     aggregateVisits('country'),
-    aggregateVisits('state'),
+    aggregateVisits('region'),
     aggregateVisits('city'),
     aggregateVisits('device'),
     aggregateVisits('os'),

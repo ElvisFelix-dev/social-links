@@ -3,6 +3,49 @@ import User from '../models/User.js'
 import ProfileVisit from '../models/ProfileVisit.js'
 import Link from '../models/Link.js'
 
+function calcDiff(current, previous) {
+  if (previous === 0) {
+    return { diff: 100, trend: 'up' }
+  }
+
+  const diff = ((current - previous) / previous) * 100
+
+  return {
+    diff: Math.round(diff),
+    trend: diff >= 0 ? 'up' : 'down'
+  }
+}
+
+export async function getVisitsComparison(days = 7) {
+  const now = new Date()
+  const startCurrent = new Date()
+  startCurrent.setDate(now.getDate() - days)
+
+  const startPrevious = new Date()
+  startPrevious.setDate(now.getDate() - days * 2)
+
+  const [current, previous] = await Promise.all([
+    ProfileVisit.countDocuments({
+      createdAt: { $gte: startCurrent }
+    }),
+    ProfileVisit.countDocuments({
+      createdAt: {
+        $gte: startPrevious,
+        $lt: startCurrent
+      }
+    })
+  ])
+
+  const { diff, trend } = calcDiff(current, previous)
+
+  return {
+    current,
+    previous,
+    diff,
+    trend
+  }
+}
+
 export async function getAdminOverview() {
   const [
     totalUsers,

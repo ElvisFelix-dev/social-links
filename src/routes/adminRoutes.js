@@ -6,15 +6,18 @@ import {
   getUserDetailsController,
   updateRole,
   toggleBlockUser,
-  getUserAnalyticsController
+  getUserAnalyticsController,
+  adminOverviewController
 } from '../controllers/adminController.js'
 
 const router = Router()
 
 router.use(authMiddleware, authAdmin)
 
-/* 📊 Dashboard */
-router.get('/overview', getOverview)
+/* 📊 DASHBOARD ADMIN (overview premium) */
+router.get('/overview',  getOverview)
+
+router.get('/overview/all', adminOverviewController)
 
 /* 👥 Usuários */
 router.get('/users', listUsers)

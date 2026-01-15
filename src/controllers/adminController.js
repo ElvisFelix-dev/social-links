@@ -4,7 +4,8 @@ import {
   getUserDetails as getUserDetailsService,
   getUserAnalytics,
   updateUserRole,
-  blockUser
+  blockUser,
+  getVisitsComparison
 } from '../services/adminService.js'
 
 /* 📊 ANALYTICS DE UM USUÁRIO */
@@ -19,6 +20,16 @@ export async function getUserAnalyticsController(req, res) {
     console.error('ADMIN getUserAnalytics error', err)
     return res.status(500).json({ message: 'Erro interno' })
   }
+}
+
+export async function adminOverviewController(req, res) {
+  const period = Number(req.query.period || 7)
+
+  const visitsComparison = await getVisitsComparison(period)
+
+  return res.json({
+    visits: visitsComparison
+  })
 }
 
 /* 📊 OVERVIEW DO SISTEMA (ADMIN) */

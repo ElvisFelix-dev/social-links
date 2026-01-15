@@ -11,7 +11,7 @@ export async function getAdminOverview() {
     clicksAgg,
 
     countries,
-    states,
+    region,
     cities,
     devices,
     os,
@@ -41,7 +41,7 @@ export async function getAdminOverview() {
 
     analytics: {
       countries,
-      states,
+      region,
       cities,
       devices,
       os,
@@ -56,7 +56,7 @@ export async function getUserAnalytics(userId) {
   const [
     visitsByDay,
     countries,
-    states,
+    region,
     cities,
     devices,
     os,
@@ -90,7 +90,7 @@ export async function getUserAnalytics(userId) {
     visitsByDay,
     locations: {
       countries,
-      states,
+      region,
       cities
     },
     devices,

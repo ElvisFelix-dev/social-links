@@ -93,6 +93,50 @@ export async function getAdminOverview() {
   }
 }
 
+export async function getTopUsersByVisits(days = 7, limit = 5) {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - days)
+
+  return ProfileVisit.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: '$userId',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        _id: 0,
+        userId: '$user._id',
+        username: '$user.username',
+        avatar: '$user.avatar',
+        visits: 1
+      }
+    }
+  ])
+}
+
+export async function getWeeklyHighlightUser() {
+  const result = await getTopUsersByVisits(7, 1)
+  return result[0] || null
+}
+
 export async function getUserAnalytics(userId) {
   const objectId = new Types.ObjectId(userId)
 

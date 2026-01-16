@@ -5,7 +5,9 @@ import {
   getUserAnalytics,
   updateUserRole,
   blockUser,
-  getVisitsComparison
+  getVisitsComparison,
+  getTopUsersByVisits,
+  getWeeklyHighlightUser
 } from '../services/adminService.js'
 
 /* 📊 ANALYTICS DE UM USUÁRIO */
@@ -28,10 +30,14 @@ export async function adminOverviewController(req, res) {
 
     const [
       overview,
-      visitsComparison
+      visitsComparison,
+      topUsers,
+      highlightUser
     ] = await Promise.all([
       getAdminOverview(),
-      getVisitsComparison(period)
+      getVisitsComparison(period),
+      getTopUsersByVisits(period),
+      getWeeklyHighlightUser()
     ])
 
     return res.json({
@@ -54,7 +60,9 @@ export async function adminOverviewController(req, res) {
         }
       },
 
-      analytics: overview.analytics
+      analytics: overview.analytics,
+      topUsers,
+      highlightUser
     })
   } catch (err) {
     console.error('ADMIN overview/all error', err)

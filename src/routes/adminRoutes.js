@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import authMiddleware, { authAdmin } from '../middleware/authMiddleware.js'
 import {
-  getOverview,
   listUsers,
   getUserDetailsController,
   updateRole,
@@ -13,9 +12,6 @@ import {
 const router = Router()
 
 router.use(authMiddleware, authAdmin)
-
-/* 📊 DASHBOARD ADMIN (overview premium) */
-router.get('/overview',  getOverview)
 
 router.get('/overview/all', adminOverviewController)
 

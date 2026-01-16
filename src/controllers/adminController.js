@@ -23,22 +23,41 @@ export async function getUserAnalyticsController(req, res) {
 }
 
 export async function adminOverviewController(req, res) {
-  const period = Number(req.query.period || 7)
-
-  const visitsComparison = await getVisitsComparison(period)
-
-  return res.json({
-    visits: visitsComparison
-  })
-}
-
-/* 📊 OVERVIEW DO SISTEMA (ADMIN) */
-export async function getOverview(req, res) {
   try {
-    const overview = await getAdminOverview()
-    return res.json(overview)
+    const period = Number(req.query.period || 7)
+
+    const [
+      overview,
+      visitsComparison
+    ] = await Promise.all([
+      getAdminOverview(),
+      getVisitsComparison(period)
+    ])
+
+    return res.json({
+      stats: {
+        users: {
+          current: overview.users,
+          diff: 0,
+          trend: 'up'
+        },
+        activeUsers: {
+          current: overview.activeUsers,
+          diff: 0,
+          trend: 'up'
+        },
+        visits: visitsComparison,
+        clicks: {
+          current: overview.clicks,
+          diff: 0,
+          trend: 'up'
+        }
+      },
+
+      analytics: overview.analytics
+    })
   } catch (err) {
-    console.error('ADMIN getOverview error', err)
+    console.error('ADMIN overview/all error', err)
     return res.status(500).json({ message: 'Erro interno' })
   }
 }

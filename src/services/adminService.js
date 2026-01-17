@@ -93,6 +93,78 @@ export async function getAdminOverview() {
   }
 }
 
+export async function getTopCreator(days = 7) {
+  const start = new Date()
+  start.setDate(start.getDate() - days)
+
+  const result = await ProfileVisit.aggregate([
+    { $match: { createdAt: { $gte: start } } },
+    {
+      $group: {
+        _id: '$userId',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } },
+    { $limit: 1 },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        _id: 0,
+        userId: '$user._id',
+        name: '$user.name',
+        avatar: '$user.avatar',
+        visits: 1
+      }
+    }
+  ])
+
+  return result[0] || null
+}
+
+export async function getTopCreators(days = 7, limit = 10) {
+  const start = new Date()
+  start.setDate(start.getDate() - days)
+
+  return ProfileVisit.aggregate([
+    { $match: { createdAt: { $gte: start } } },
+    {
+      $group: {
+        _id: '$userId',
+        visits: { $sum: 1 }
+      }
+    },
+    { $sort: { visits: -1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        _id: 0,
+        userId: '$user._id',
+        name: '$user.name',
+        avatar: '$user.avatar',
+        visits: 1
+      }
+    }
+  ])
+}
+
 export async function getTopUsersByVisits(days = 7, limit = 5) {
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)

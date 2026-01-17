@@ -29,9 +29,6 @@ export async function getTopCreatorsController(req, res) {
 
     const creators = await getTopCreators(period)
 
-    // 🔎 DEBUG – veja exatamente o que vem do Mongo
-    console.log('TOP CREATORS:', creators)
-
     return res.json(creators)
   } catch (error) {
     console.error('Erro ao buscar top creators:', error)

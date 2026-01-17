@@ -11,7 +11,6 @@ const router = Router()
 router.get('/public/:username', getPublicProfile)
 router.get('/l/:id', registerClick)
 router.get('/top-creators', getTopCreatorsController)
-router.get('/top-creator/week', getTopCreatorsController)
 // routes/publicRoutes.js
 router.get('/badge/top-week/:username', getTopCreatorBadge)
 

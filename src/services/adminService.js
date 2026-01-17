@@ -158,6 +158,7 @@ export async function getTopCreators(days = 7, limit = 10) {
         _id: 0,
         userId: '$user._id',
         name: '$user.name',
+        username: '$user.username',
         avatar: '$user.avatar',
         visits: 1
       }

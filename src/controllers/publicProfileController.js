@@ -24,10 +24,21 @@ export async function getTopCreatorController(req, res) {
 }
 
 export async function getTopCreatorsController(req, res) {
-  const period = Number(req.query.period || 7)
+  try {
+    const period = Number(req.query.period || 7)
 
-  const creators = await getTopCreators(period)
-  return res.json(creators)
+    const creators = await getTopCreators(period)
+
+    // 🔎 DEBUG – veja exatamente o que vem do Mongo
+    console.log('TOP CREATORS:', creators)
+
+    return res.json(creators)
+  } catch (error) {
+    console.error('Erro ao buscar top creators:', error)
+    return res.status(500).json({
+      error: 'Erro interno ao buscar top creators'
+    })
+  }
 }
 
 export const getPublicProfile = async (req, res) => {

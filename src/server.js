@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import passport from 'passport'
 import dotenv from 'dotenv'
+import cron from 'node-cron'
 
 dotenv.config()
 
@@ -60,8 +61,27 @@ app.use(passport.initialize())
 ====================== */
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log('📊 Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB error:', err.message))
+  .then(() => {
+    console.log('📊 Connected to MongoDB')
+
+    // ==========================
+    // Ping a cada 6 horas
+    // ==========================
+    cron.schedule('0 */6 * * *', async () => {
+      try {
+        await mongoose.connection.db.admin().ping()
+
+        console.log(
+          `🏓 MongoDB Ping executado em ${new Date().toLocaleString('pt-BR')}`,
+        )
+      } catch (err) {
+        console.error('❌ Erro ao executar MongoDB Ping:', err.message)
+      }
+    })
+
+    console.log('⏰ MongoDB Ping agendado para cada 6 horas.')
+  })
+  .catch((err) => console.error('❌ MongoDB error:', err.message))
 
 /* ======================
    HEALTH CHECK
